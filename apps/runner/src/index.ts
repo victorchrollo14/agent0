@@ -1,10 +1,33 @@
 import Fastify from 'fastify';
+import fastifyStatic from '@fastify/static';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ESM fix for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const fastify = Fastify({ logger: true });
 
-fastify.get('/', async () => {
-    return { status: 'Runner is active' }
+// 1. Register Static File Serving
+fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '../public'), // Points to the copied web/dist folder
+    prefix: '/', // Serve at root
 });
+
+// 2. Catch-all for SPA (Single Page App) Routing
+// If a user goes to /prompts/edit/123, Fastify shouldn't 404, it should serve index.html
+fastify.setNotFoundHandler((req, reply) => {
+    if (req.raw.url && req.raw.url.startsWith('/api')) {
+        // If it's an actual API 404, return JSON
+        reply.code(404).send({ error: 'API endpoint not found' });
+    } else {
+        // Otherwise, return the App (Client-side routing handles the rest)
+        reply.sendFile('index.html');
+    }
+});
+
+// ... your API routes ...
 
 const start = async () => {
     try {
@@ -14,5 +37,4 @@ const start = async () => {
         process.exit(1);
     }
 };
-
 start();
