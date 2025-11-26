@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import logo from '../logo.svg'
+import { Alert, Button } from '@heroui/react'
 
 export const Route = createFileRoute('/')({
   component: App,
@@ -33,6 +34,9 @@ function App() {
         >
           Learn TanStack
         </a>
+
+        <Button color='primary'>Test</Button>
+        <Alert title="Error" description="This is an error" color='danger' />
       </header>
     </div>
   )
