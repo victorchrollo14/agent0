@@ -5,4 +5,4 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - supabase
-  - heroui/shared-utils
+  - '@heroui/shared-utils'
