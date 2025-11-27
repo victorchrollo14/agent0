@@ -11,3 +11,19 @@ export const workspacesQuery = queryOptions({
         return data;
     },
 })
+
+export const providersQuery = (workspaceId: string) => queryOptions({
+    queryKey: ["providers", workspaceId],
+    queryFn: async () => {
+        const { data, error } = await supabase
+            .from("providers")
+            .select("*")
+            .eq("workspace_id", workspaceId)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        return data;
+    },
+    enabled: !!workspaceId,
+})

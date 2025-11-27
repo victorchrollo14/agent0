@@ -14,7 +14,8 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppCreateWorkspaceRouteImport } from './routes/_app.create-workspace'
 import { Route as AppWorkspaceWorkspaceIdRouteImport } from './routes/_app.workspace.$workspaceId'
 import { Route as AppWorkspaceWorkspaceIdIndexRouteImport } from './routes/_app.workspace.$workspaceId.index'
-import { Route as AppWorkspaceWorkspaceIdProvidersRouteImport } from './routes/_app.workspace.$workspaceId.providers'
+import { Route as AppWorkspaceWorkspaceIdProvidersIndexRouteImport } from './routes/_app.workspace.$workspaceId.providers.index'
+import { Route as AppWorkspaceWorkspaceIdProvidersProviderIdRouteImport } from './routes/_app.workspace.$workspaceId.providers.$providerId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -41,10 +42,16 @@ const AppWorkspaceWorkspaceIdIndexRoute =
     path: '/',
     getParentRoute: () => AppWorkspaceWorkspaceIdRoute,
   } as any)
-const AppWorkspaceWorkspaceIdProvidersRoute =
-  AppWorkspaceWorkspaceIdProvidersRouteImport.update({
-    id: '/providers',
-    path: '/providers',
+const AppWorkspaceWorkspaceIdProvidersIndexRoute =
+  AppWorkspaceWorkspaceIdProvidersIndexRouteImport.update({
+    id: '/providers/',
+    path: '/providers/',
+    getParentRoute: () => AppWorkspaceWorkspaceIdRoute,
+  } as any)
+const AppWorkspaceWorkspaceIdProvidersProviderIdRoute =
+  AppWorkspaceWorkspaceIdProvidersProviderIdRouteImport.update({
+    id: '/providers/$providerId',
+    path: '/providers/$providerId',
     getParentRoute: () => AppWorkspaceWorkspaceIdRoute,
   } as any)
 
@@ -52,14 +59,16 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/create-workspace': typeof AppCreateWorkspaceRoute
   '/workspace/$workspaceId': typeof AppWorkspaceWorkspaceIdRouteWithChildren
-  '/workspace/$workspaceId/providers': typeof AppWorkspaceWorkspaceIdProvidersRoute
   '/workspace/$workspaceId/': typeof AppWorkspaceWorkspaceIdIndexRoute
+  '/workspace/$workspaceId/providers/$providerId': typeof AppWorkspaceWorkspaceIdProvidersProviderIdRoute
+  '/workspace/$workspaceId/providers': typeof AppWorkspaceWorkspaceIdProvidersIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/create-workspace': typeof AppCreateWorkspaceRoute
-  '/workspace/$workspaceId/providers': typeof AppWorkspaceWorkspaceIdProvidersRoute
   '/workspace/$workspaceId': typeof AppWorkspaceWorkspaceIdIndexRoute
+  '/workspace/$workspaceId/providers/$providerId': typeof AppWorkspaceWorkspaceIdProvidersProviderIdRoute
+  '/workspace/$workspaceId/providers': typeof AppWorkspaceWorkspaceIdProvidersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -67,8 +76,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_app/create-workspace': typeof AppCreateWorkspaceRoute
   '/_app/workspace/$workspaceId': typeof AppWorkspaceWorkspaceIdRouteWithChildren
-  '/_app/workspace/$workspaceId/providers': typeof AppWorkspaceWorkspaceIdProvidersRoute
   '/_app/workspace/$workspaceId/': typeof AppWorkspaceWorkspaceIdIndexRoute
+  '/_app/workspace/$workspaceId/providers/$providerId': typeof AppWorkspaceWorkspaceIdProvidersProviderIdRoute
+  '/_app/workspace/$workspaceId/providers/': typeof AppWorkspaceWorkspaceIdProvidersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -76,22 +86,25 @@ export interface FileRouteTypes {
     | '/auth'
     | '/create-workspace'
     | '/workspace/$workspaceId'
-    | '/workspace/$workspaceId/providers'
     | '/workspace/$workspaceId/'
+    | '/workspace/$workspaceId/providers/$providerId'
+    | '/workspace/$workspaceId/providers'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
     | '/create-workspace'
-    | '/workspace/$workspaceId/providers'
     | '/workspace/$workspaceId'
+    | '/workspace/$workspaceId/providers/$providerId'
+    | '/workspace/$workspaceId/providers'
   id:
     | '__root__'
     | '/_app'
     | '/auth'
     | '/_app/create-workspace'
     | '/_app/workspace/$workspaceId'
-    | '/_app/workspace/$workspaceId/providers'
     | '/_app/workspace/$workspaceId/'
+    | '/_app/workspace/$workspaceId/providers/$providerId'
+    | '/_app/workspace/$workspaceId/providers/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -136,26 +149,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceWorkspaceIdIndexRouteImport
       parentRoute: typeof AppWorkspaceWorkspaceIdRoute
     }
-    '/_app/workspace/$workspaceId/providers': {
-      id: '/_app/workspace/$workspaceId/providers'
+    '/_app/workspace/$workspaceId/providers/': {
+      id: '/_app/workspace/$workspaceId/providers/'
       path: '/providers'
       fullPath: '/workspace/$workspaceId/providers'
-      preLoaderRoute: typeof AppWorkspaceWorkspaceIdProvidersRouteImport
+      preLoaderRoute: typeof AppWorkspaceWorkspaceIdProvidersIndexRouteImport
+      parentRoute: typeof AppWorkspaceWorkspaceIdRoute
+    }
+    '/_app/workspace/$workspaceId/providers/$providerId': {
+      id: '/_app/workspace/$workspaceId/providers/$providerId'
+      path: '/providers/$providerId'
+      fullPath: '/workspace/$workspaceId/providers/$providerId'
+      preLoaderRoute: typeof AppWorkspaceWorkspaceIdProvidersProviderIdRouteImport
       parentRoute: typeof AppWorkspaceWorkspaceIdRoute
     }
   }
 }
 
 interface AppWorkspaceWorkspaceIdRouteChildren {
-  AppWorkspaceWorkspaceIdProvidersRoute: typeof AppWorkspaceWorkspaceIdProvidersRoute
   AppWorkspaceWorkspaceIdIndexRoute: typeof AppWorkspaceWorkspaceIdIndexRoute
+  AppWorkspaceWorkspaceIdProvidersProviderIdRoute: typeof AppWorkspaceWorkspaceIdProvidersProviderIdRoute
+  AppWorkspaceWorkspaceIdProvidersIndexRoute: typeof AppWorkspaceWorkspaceIdProvidersIndexRoute
 }
 
 const AppWorkspaceWorkspaceIdRouteChildren: AppWorkspaceWorkspaceIdRouteChildren =
   {
-    AppWorkspaceWorkspaceIdProvidersRoute:
-      AppWorkspaceWorkspaceIdProvidersRoute,
     AppWorkspaceWorkspaceIdIndexRoute: AppWorkspaceWorkspaceIdIndexRoute,
+    AppWorkspaceWorkspaceIdProvidersProviderIdRoute:
+      AppWorkspaceWorkspaceIdProvidersProviderIdRoute,
+    AppWorkspaceWorkspaceIdProvidersIndexRoute:
+      AppWorkspaceWorkspaceIdProvidersIndexRoute,
   }
 
 const AppWorkspaceWorkspaceIdRouteWithChildren =
