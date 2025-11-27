@@ -8,7 +8,6 @@ import {
 	SelectItem,
 	Textarea,
 } from "@heroui/react";
-import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 export const PROVIDER_TYPES = [
@@ -40,7 +39,6 @@ export function ProviderForm({
 	isSubmitting,
 	title,
 }: ProviderFormProps) {
-	const navigate = useNavigate();
 	const [jsonError, setJsonError] = useState<string | null>(null);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
