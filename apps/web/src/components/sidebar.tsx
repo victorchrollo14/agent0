@@ -91,7 +91,10 @@ export function Sidebar({ workspaceId }: SidebarProps) {
 							{(workspaces || []).map((workspace) => (
 								<DropdownItem
 									key={workspace.id}
-									onPress={() => navigate({ to: `/workspace/${workspace.id}` })}
+									onPress={() => {
+										navigate({ to: `/workspace/${workspace.id}` });
+										localStorage.setItem("lastAccessedWorkspace", workspace.id);
+									}}
 								>
 									{workspace.name}
 								</DropdownItem>
