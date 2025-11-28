@@ -1,13 +1,20 @@
-import { Button, Divider, Input, Select, SelectItem } from "@heroui/react";
+import {
+	Button,
+	Listbox,
+	ListboxItem,
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@heroui/react";
 import type { Json } from "@repo/database";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
 import { nanoid } from "nanoid";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Messages, type MessageT, messageSchema } from "@/components/messages";
+import { PROVIDER_TYPES } from "@/lib/providers";
 import { agentVersionsQuery, providersQuery } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 
@@ -19,8 +26,10 @@ export const Route = createFileRoute(
 
 // Zod schema for form validation
 const agentFormSchema = z.object({
-	providerId: z.string().min(1, "Provider is required"),
-	model: z.string().min(1, "Model is required"),
+	provider: z.object({
+		id: z.string(),
+		model: z.string(),
+	}),
 	messages: z.array(messageSchema).min(1, "At least one message is required"),
 });
 
@@ -57,8 +66,7 @@ function RouteComponent() {
 	// Create mutation (creates both agent and first version)
 	const createMutation = useMutation({
 		mutationFn: async (values: {
-			providerId: string;
-			model: string;
+			provider: { id: string; model: string };
 			messages: MessageT[];
 		}) => {
 			const newAgentId = nanoid();
@@ -77,9 +85,9 @@ function RouteComponent() {
 			const { error: versionError } = await supabase.from("versions").insert({
 				id: newVersionId,
 				agent_id: newAgentId,
-				provider_id: values.providerId,
+				provider_id: values.provider.id,
 				data: {
-					model: values.model,
+					model: values.provider.model,
 					messages: values.messages,
 				} as unknown as Json,
 				is_deployed: false,
@@ -107,8 +115,10 @@ function RouteComponent() {
 	// Update mutation (creates new version)
 	const updateMutation = useMutation({
 		mutationFn: async (values: {
-			providerId: string;
-			model: string;
+			provider: {
+				id: string;
+				model: string;
+			};
 			messages: MessageT[];
 		}) => {
 			const newVersionId = nanoid();
@@ -117,9 +127,9 @@ function RouteComponent() {
 			const { error: versionError } = await supabase.from("versions").insert({
 				id: newVersionId,
 				agent_id: agentId,
-				provider_id: values.providerId,
+				provider_id: values.provider.id,
 				data: {
-					model: values.model,
+					model: values.provider.model,
 					messages: values.messages,
 				} as unknown as Json,
 				is_deployed: false,
@@ -143,8 +153,10 @@ function RouteComponent() {
 	// Initialize TanStack Form
 	const form = useForm({
 		defaultValues: {
-			providerId: latestVersion?.provider_id || "",
-			model: (latestVersion?.data as { model?: string } | null)?.model || "",
+			provider: {
+				id: latestVersion?.provider_id || "",
+				model: (latestVersion?.data as { model?: string } | null)?.model || "",
+			},
 			messages: (latestVersion?.data as { messages?: MessageT[] } | null)
 				?.messages || [
 				{
@@ -214,47 +226,67 @@ function RouteComponent() {
 				</div>
 				<div className="flex h-full">
 					<div className="flex-1 p-6 space-y-6 border-r border-default-200">
-						{/* Provider Field */}
-						<form.Field name="providerId">
-							{(field) => (
-								<Select
-									label="Provider"
-									placeholder="Select a provider"
-									selectedKeys={field.state.value ? [field.state.value] : []}
-									onSelectionChange={(keys) => {
-										const selected = Array.from(keys)[0];
-										field.handleChange(selected as string);
-									}}
-									isRequired
-									variant="bordered"
-									description="The AI provider to use for this agent"
-									isInvalid={field.state.meta.errors.length > 0}
-									errorMessage={getErrorMessage(field.state.meta.errors)}
-									isLoading={isLoadingProviders}
-									isDisabled={!providers || providers.length === 0}
-								>
-									{providers?.map((provider) => (
-										<SelectItem key={provider.id}>{provider.name}</SelectItem>
-									)) || []}
-								</Select>
-							)}
-						</form.Field>
+						<form.Field name="provider">
+							{(field) => {
+								const selectedProvider = providers?.find(
+									(provider) => provider.id === field.state.value.id,
+								);
 
-						{/* Model Field */}
-						<form.Field name="model">
-							{(field) => (
-								<Input
-									label="Model"
-									placeholder="e.g., gpt-4"
-									value={field.state.value}
-									onValueChange={field.handleChange}
-									isRequired
-									variant="bordered"
-									description="The AI model to use (e.g., gpt-4, claude-3-opus)"
-									isInvalid={field.state.meta.errors.length > 0}
-									errorMessage={getErrorMessage(field.state.meta.errors)}
-								/>
-							)}
+								const availableModels =
+									PROVIDER_TYPES.find(
+										(provider) => provider.key === selectedProvider?.type,
+									)?.models || [];
+
+								return (
+									<Popover placement="bottom-start">
+										<PopoverTrigger>
+											<Button>
+												@{selectedProvider?.name}/{field.state.value.model}
+											</Button>
+										</PopoverTrigger>
+										<PopoverContent className="p-2 flex flex-row">
+											<div className="w-36 h-64 border-r border-default-200 overflow-y-scroll">
+												<Listbox
+													selectionMode="single"
+													selectedKeys={[field.state.value.id]}
+													onSelectionChange={(keys) => {
+														const selected = Array.from(keys)[0];
+														field.handleChange({
+															id: selected as string,
+															model: field.state.value.model,
+														});
+													}}
+													variant="flat"
+												>
+													{providers?.map((provider) => (
+														<ListboxItem key={provider.id}>
+															{provider.name}
+														</ListboxItem>
+													)) || []}
+												</Listbox>
+											</div>
+											<div className="w-56 h-64 overflow-y-scroll">
+												<Listbox
+													selectionMode="single"
+													selectedKeys={[field.state.value.model]}
+													onSelectionChange={(keys) => {
+														const selected = Array.from(keys)[0];
+														field.handleChange({
+															id: field.state.value.id,
+															model: selected as string,
+														});
+													}}
+													variant="flat"
+												>
+													{availableModels.map((model) => (
+														<ListboxItem key={model}>{model}</ListboxItem>
+													))}
+												</Listbox>
+											</div>
+										</PopoverContent>
+									</Popover>
+								);
+							}}
 						</form.Field>
 
 						<form.Field name="messages" mode="array">
