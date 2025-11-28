@@ -15,10 +15,95 @@ export const Route = createFileRoute(
 	component: RouteComponent,
 });
 
+const systemMessageSchema = z.object({
+	role: z.literal("system"),
+	content: z.string().min(1, "System message content is required"),
+});
+
+const userMessageSchema = z.object({
+	role: z.literal("user"),
+	content: z
+		.array(
+			z.union([
+				z.object({
+					type: z.literal("text"),
+					text: z.string(),
+				}),
+				z.object({
+					type: z.literal("image"),
+					image: z.string(),
+					mediaType: z.string().optional(),
+				}),
+				z.object({
+					type: z.literal("file"),
+					data: z.string(),
+					mediaType: z.string(),
+				}),
+			]),
+		)
+		.min(1, "User message must have at least one content part"),
+});
+
+const assistantMessage = z.object({
+	role: z.literal("assistant"),
+	content: z.union([
+		z.string().min(1, "Assistant message content is required"),
+		z
+			.array(
+				z.union([
+					z.object({
+						type: z.literal("text"),
+						text: z.string(),
+					}),
+					z.object({
+						type: z.literal("reasoning"),
+						text: z.string(),
+					}),
+					z.object({
+						type: z.literal("file"),
+						data: z.string(),
+						mediaType: z.string(),
+						fileName: z.string().optional(),
+					}),
+					z.object({
+						type: z.literal("tool-call"),
+						toolCallId: z.string(),
+						toolName: z.string(),
+						input: z.any(),
+					}),
+				]),
+			)
+			.min(1, "Assistant message must have at least one content part"),
+	]),
+});
+
+const toolMessagePart = z.object({
+	type: z.literal("tool"),
+	content: z.array(
+		z.object({
+			type: z.literal("tool-result"),
+			toolCallId: z.string(),
+			toolName: z.string(),
+			output: z.unknown(),
+			isError: z.boolean().optional,
+		}),
+	),
+});
+
 // Zod schema for form validation
 const agentFormSchema = z.object({
 	providerId: z.string().min(1, "Provider is required"),
 	model: z.string().min(1, "Model is required"),
+	messages: z
+		.array(
+			z.union([
+				systemMessageSchema,
+				userMessageSchema,
+				assistantMessage,
+				toolMessagePart,
+			]),
+		)
+		.min(1, "At least one message is required"),
 });
 
 // Helper to get error message as string
@@ -46,22 +131,6 @@ function RouteComponent() {
 	// Fetch existing agent versions if editing
 	const { data: versions, isLoading: isLoadingVersions } = useQuery({
 		...agentVersionsQuery(agentId),
-		enabled: !isNewAgent,
-	});
-
-	// Fetch agent details if editing
-	const { data: agents } = useQuery({
-		queryKey: ["agent", agentId],
-		queryFn: async () => {
-			const { data, error } = await supabase
-				.from("agents")
-				.select("*")
-				.eq("id", agentId)
-				.single();
-
-			if (error) throw error;
-			return data;
-		},
 		enabled: !isNewAgent,
 	});
 
