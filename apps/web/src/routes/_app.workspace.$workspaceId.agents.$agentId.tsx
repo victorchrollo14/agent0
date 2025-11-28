@@ -1,11 +1,4 @@
-import {
-	Button,
-	Listbox,
-	ListboxItem,
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@heroui/react";
+import { Button } from "@heroui/react";
 import type { Json } from "@repo/database";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,7 +7,7 @@ import { nanoid } from "nanoid";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Messages, type MessageT, messageSchema } from "@/components/messages";
-import { PROVIDER_TYPES } from "@/lib/providers";
+import { ProviderSelector } from "@/components/provider-selector";
 import { agentVersionsQuery, providersQuery } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 
@@ -32,17 +25,6 @@ const agentFormSchema = z.object({
 	}),
 	messages: z.array(messageSchema).min(1, "At least one message is required"),
 });
-
-// Helper to get error message as string
-function getErrorMessage(errors: unknown[]): string | undefined {
-	if (errors.length === 0) return undefined;
-	const error = errors[0];
-	if (typeof error === "string") return error;
-	if (error && typeof error === "object" && "message" in error) {
-		return String(error.message);
-	}
-	return undefined;
-}
 
 function RouteComponent() {
 	const { workspaceId, agentId } = Route.useParams();
@@ -227,66 +209,14 @@ function RouteComponent() {
 				<div className="flex h-full">
 					<div className="flex-1 p-6 space-y-6 border-r border-default-200">
 						<form.Field name="provider">
-							{(field) => {
-								const selectedProvider = providers?.find(
-									(provider) => provider.id === field.state.value.id,
-								);
-
-								const availableModels =
-									PROVIDER_TYPES.find(
-										(provider) => provider.key === selectedProvider?.type,
-									)?.models || [];
-
-								return (
-									<Popover placement="bottom-start">
-										<PopoverTrigger>
-											<Button>
-												@{selectedProvider?.name}/{field.state.value.model}
-											</Button>
-										</PopoverTrigger>
-										<PopoverContent className="p-2 flex flex-row">
-											<div className="w-36 h-64 border-r border-default-200 overflow-y-scroll">
-												<Listbox
-													selectionMode="single"
-													selectedKeys={[field.state.value.id]}
-													onSelectionChange={(keys) => {
-														const selected = Array.from(keys)[0];
-														field.handleChange({
-															id: selected as string,
-															model: field.state.value.model,
-														});
-													}}
-													variant="flat"
-												>
-													{providers?.map((provider) => (
-														<ListboxItem key={provider.id}>
-															{provider.name}
-														</ListboxItem>
-													)) || []}
-												</Listbox>
-											</div>
-											<div className="w-56 h-64 overflow-y-scroll">
-												<Listbox
-													selectionMode="single"
-													selectedKeys={[field.state.value.model]}
-													onSelectionChange={(keys) => {
-														const selected = Array.from(keys)[0];
-														field.handleChange({
-															id: field.state.value.id,
-															model: selected as string,
-														});
-													}}
-													variant="flat"
-												>
-													{availableModels.map((model) => (
-														<ListboxItem key={model}>{model}</ListboxItem>
-													))}
-												</Listbox>
-											</div>
-										</PopoverContent>
-									</Popover>
-								);
-							}}
+							{(field) => (
+								<ProviderSelector
+									value={field.state.value}
+									onChange={field.handleChange}
+									providers={providers || []}
+									isInvalid={field.state.meta.errors.length > 0}
+								/>
+							)}
 						</form.Field>
 
 						<form.Field name="messages" mode="array">
