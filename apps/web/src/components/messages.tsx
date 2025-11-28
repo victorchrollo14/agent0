@@ -68,12 +68,12 @@ const toolMessageSchema = z.object({
 			toolCallId: z.string(),
 			toolName: z.string(),
 			output: z.unknown(),
-			isError: z.boolean().optional,
+			isError: z.boolean().optional(),
 		}),
 	),
 });
 
-export const messageSchema = z.discriminatedUnion("type", [
+export const messageSchema = z.discriminatedUnion("role", [
 	systemMessageSchema,
 	userMessageSchema,
 	assistantMessage,
@@ -101,6 +101,39 @@ function SystemMessage({
 	);
 }
 
+function UserMessage({
+	value,
+	onValueChange,
+}: {
+	value: Extract<MessageT, { role: "user" }>["content"];
+	onValueChange: (
+		value: Extract<MessageT, { role: "user" }>["content"],
+	) => void;
+}) {
+	return (
+		<div className="flex flex-col gap-2">
+			{value.map((part, index) => {
+				if (part.type === "text") {
+					return (
+						<Textarea
+							key={`${index + 1}`}
+							variant="bordered"
+							label="User"
+							value={part.text}
+							onValueChange={(text) => {
+								const newContent = [...value];
+								newContent[index] = { ...part, text };
+								onValueChange(newContent);
+							}}
+						/>
+					);
+				}
+				return null;
+			})}
+		</div>
+	);
+}
+
 interface MessagesProps {
 	value: MessageT[];
 	onValueChange: (value: MessageT[]) => void;
@@ -120,6 +153,25 @@ export function Messages({ value, onValueChange }: MessagesProps) {
 
 								newMessages[index] = {
 									role: "system",
+									content,
+								};
+
+								onValueChange(newMessages);
+							}}
+						/>
+					);
+				}
+
+				if (message.role === "user") {
+					return (
+						<UserMessage
+							key={`${index + 1}`}
+							value={message.content}
+							onValueChange={(content) => {
+								const newMessages = [...value];
+
+								newMessages[index] = {
+									role: "user",
 									content,
 								};
 

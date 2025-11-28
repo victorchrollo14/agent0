@@ -1,4 +1,5 @@
 import { Button, Input, Select, SelectItem } from "@heroui/react";
+import type { Json } from "@repo/database";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -55,7 +56,11 @@ function RouteComponent() {
 
 	// Create mutation (creates both agent and first version)
 	const createMutation = useMutation({
-		mutationFn: async (values: { providerId: string; model: string }) => {
+		mutationFn: async (values: {
+			providerId: string;
+			model: string;
+			messages: MessageT[];
+		}) => {
 			const newAgentId = nanoid();
 			const newVersionId = nanoid();
 
@@ -73,7 +78,10 @@ function RouteComponent() {
 				id: newVersionId,
 				agent_id: newAgentId,
 				provider_id: values.providerId,
-				data: { model: values.model },
+				data: {
+					model: values.model,
+					messages: values.messages,
+				} as unknown as Json,
 				is_deployed: false,
 			});
 
@@ -98,7 +106,11 @@ function RouteComponent() {
 
 	// Update mutation (creates new version)
 	const updateMutation = useMutation({
-		mutationFn: async (values: { providerId: string; model: string }) => {
+		mutationFn: async (values: {
+			providerId: string;
+			model: string;
+			messages: MessageT[];
+		}) => {
 			const newVersionId = nanoid();
 
 			// Create new version
@@ -106,7 +118,10 @@ function RouteComponent() {
 				id: newVersionId,
 				agent_id: agentId,
 				provider_id: values.providerId,
-				data: { model: values.model },
+				data: {
+					model: values.model,
+					messages: values.messages,
+				} as unknown as Json,
 				is_deployed: false,
 			});
 
@@ -135,6 +150,15 @@ function RouteComponent() {
 				{
 					role: "system",
 					content: "",
+				},
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "",
+						},
+					],
 				},
 			],
 		},
