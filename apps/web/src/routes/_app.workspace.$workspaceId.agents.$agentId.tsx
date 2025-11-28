@@ -176,38 +176,39 @@ function RouteComponent() {
 
 	return (
 		<form
+			className="flex flex-col h-screen"
 			onSubmit={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
 				form.handleSubmit();
 			}}
 		>
-			<div className="min-h-screen">
-				<div className="mt-[1px] w-full flex items-center justify-between p-6 h-16 border-b border-default-200">
-					<p>Name</p>
+			<div className="mt-px w-full flex items-center justify-between p-4 h-16 border-b border-default-200 flex-shrink-0">
+				<p>Name</p>
 
-					<div className="flex items-center gap-2">
-						<form.Subscribe
-							selector={(state) => ({
-								canSubmit: state.canSubmit,
-								isSubmitting: state.isSubmitting,
-							})}
-						>
-							{(state) => (
-								<Button
-									type="submit"
-									color="primary"
-									isLoading={isLoading || state.isSubmitting}
-									isDisabled={!state.canSubmit || isLoading}
-								>
-									{isNewAgent ? "Create Agent" : "Save New Version"}
-								</Button>
-							)}
-						</form.Subscribe>
-					</div>
+				<div className="flex items-center gap-2">
+					<form.Subscribe
+						selector={(state) => ({
+							canSubmit: state.canSubmit,
+							isSubmitting: state.isSubmitting,
+						})}
+					>
+						{(state) => (
+							<Button
+								type="submit"
+								color="primary"
+								isLoading={isLoading || state.isSubmitting}
+								isDisabled={!state.canSubmit || isLoading}
+							>
+								{isNewAgent ? "Create Agent" : "Save New Version"}
+							</Button>
+						)}
+					</form.Subscribe>
 				</div>
-				<div className="flex h-full">
-					<div className="flex-1 p-6 space-y-6 border-r border-default-200">
+			</div>
+			<div className="flex flex-1 overflow-hidden">
+				<div className="flex-1 flex flex-col border-r border-default-200 min-h-0">
+					<div className="flex-1 overflow-y-auto p-4 space-y-4">
 						<form.Field name="provider">
 							{(field) => (
 								<ProviderSelector
@@ -228,10 +229,15 @@ function RouteComponent() {
 							)}
 						</form.Field>
 					</div>
-
-					<div className="flex-1 p-6">
-						<p>Right Side</p>
+					<div className="flex justify-end p-4 border-t border-default-200">
+						<Button color="secondary" type="button">
+							Generate
+						</Button>
 					</div>
+				</div>
+
+				<div className="flex-1 p-4 overflow-y-auto">
+					<p>Right Side</p>
 				</div>
 			</div>
 		</form>
