@@ -64,7 +64,7 @@ export function Sidebar({ workspaceId }: SidebarProps) {
 	);
 
 	return (
-		<div className={`border-r border-default-200 flex flex-col w-64`}>
+		<div className={`border-r border-default-200 flex flex-col w-52`}>
 			<div className="border-b border-default-200">
 				<Dropdown
 					size="lg"
