@@ -56,46 +56,42 @@ export function VariablesDrawer({
 	return (
 		<Drawer isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">
 			<DrawerContent>
-				{(onClose) => (
-					<>
-						<DrawerHeader>Variables</DrawerHeader>
-						<DrawerBody>
-							<div className="flex flex-col gap-4">
-								{variables.length === 0 && (
-									<p className="text-default-500 text-sm">
-										No variables found in messages.
-									</p>
-								)}
-								{variables.map((variable) => (
-									<Textarea
-										maxRows={10}
-										key={variable}
-										label={variable}
-										placeholder={`Value for ${variable}`}
-										value={values[variable] || ""}
-										onValueChange={(val) =>
-											onValuesChange({ ...values, [variable]: val })
-										}
-									/>
-								))}
-							</div>
-						</DrawerBody>
-						{onRun && (
-							<DrawerFooter>
-								<Button
-									color="primary"
-									className="w-full"
-									startContent={<LucidePlay className="size-4" />}
-									onPress={() => {
-										onClose();
-										onRun();
-									}}
-								>
-									Run
-								</Button>
-							</DrawerFooter>
+				<DrawerHeader>Variables</DrawerHeader>
+				<DrawerBody>
+					<div className="flex flex-col gap-4">
+						{variables.length === 0 && (
+							<p className="text-default-500 text-sm">
+								No variables found in messages.
+							</p>
 						)}
-					</>
+						{variables.map((variable) => (
+							<Textarea
+								maxRows={10}
+								key={variable}
+								label={variable}
+								placeholder={`Value for ${variable}`}
+								value={values[variable] || ""}
+								onValueChange={(val) =>
+									onValuesChange({ ...values, [variable]: val })
+								}
+							/>
+						))}
+					</div>
+				</DrawerBody>
+				{onRun && (
+					<DrawerFooter>
+						<Button
+							color="primary"
+							className="w-full"
+							startContent={<LucidePlay className="size-4" />}
+							onPress={() => {
+								onOpenChange();
+								onRun();
+							}}
+						>
+							Run
+						</Button>
+					</DrawerFooter>
 				)}
 			</DrawerContent>
 		</Drawer>

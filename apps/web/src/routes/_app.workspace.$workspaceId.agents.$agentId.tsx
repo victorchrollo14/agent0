@@ -16,6 +16,7 @@ import { events } from "fetch-event-stream";
 import {
 	LucideBraces,
 	LucideCornerUpLeft,
+	LucideHistory,
 	LucideListPlus,
 	LucideLoader2,
 	LucidePlay,
@@ -24,6 +25,7 @@ import { nanoid } from "nanoid";
 import { useCallback, useEffect, useState } from "react";
 import useDb from "use-db";
 import { z } from "zod";
+import { HistoryDrawer } from "@/components/history-drawer";
 import {
 	type assistantMessageSchema,
 	Messages,
@@ -67,6 +69,8 @@ function RouteComponent() {
 	);
 
 	const { isOpen: isVariablesOpen, onOpenChange: onVariablesOpenChange } =
+		useDisclosure();
+	const { isOpen: isHistoryOpen, onOpenChange: onHistoryOpenChange } =
 		useDisclosure();
 
 	// Fetch agent
@@ -400,11 +404,27 @@ function RouteComponent() {
 
 							return (
 								<p className="text-sm text-default-500">
-									#{version?.id.slice(-7)}
+									#{version?.id.slice(0, 7)}
 								</p>
 							);
 						}}
 					</form.Subscribe>
+					<HistoryDrawer
+						isOpen={isHistoryOpen}
+						onOpenChange={onHistoryOpenChange}
+						versions={versions || []}
+						onSelectionChange={(v: Tables<"versions">) => {
+							setVersion(v);
+						}}
+					/>
+					<Button
+						isIconOnly
+						variant="flat"
+						onPress={() => onHistoryOpenChange()}
+					>
+						<LucideHistory className="size-4" />
+					</Button>
+
 					<form.Subscribe selector={(state) => state.values.messages}>
 						{(messages) => (
 							<VariablesDrawer
@@ -424,6 +444,7 @@ function RouteComponent() {
 					>
 						<LucideBraces className="size-4" />
 					</Button>
+
 					<form.Subscribe
 						selector={(state) => ({
 							canSubmit: state.canSubmit,

@@ -110,6 +110,7 @@ export type Database = {
           id: string
           is_deployed: boolean
           provider_id: string
+          user_id: string
         }
         Insert: {
           agent_id: string
@@ -118,6 +119,7 @@ export type Database = {
           id: string
           is_deployed?: boolean
           provider_id: string
+          user_id?: string
         }
         Update: {
           agent_id?: string
@@ -126,6 +128,7 @@ export type Database = {
           id?: string
           is_deployed?: boolean
           provider_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -140,6 +143,13 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "versions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
