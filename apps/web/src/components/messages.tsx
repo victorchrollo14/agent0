@@ -1,7 +1,8 @@
 import { Button, Card, CardBody, CardHeader } from "@heroui/react";
-import { LucideMinusCircle, LucideTrash } from "lucide-react";
+import { LucideBraces, LucideMinusCircle, LucideTrash } from "lucide-react";
+import { useMemo } from "react";
+import TextareaAutosize from "react-textarea-autosize";
 import { z } from "zod";
-import { VariablesTextArea } from "./variables-text-area";
 
 const systemMessageSchema = z.object({
 	role: z.literal("system"),
@@ -91,6 +92,32 @@ export const messageSchema = z.discriminatedUnion("role", [
 
 export type MessageT = z.infer<typeof messageSchema>;
 
+function Variables({
+	variables,
+	onVariablePress,
+}: {
+	variables: string[];
+	onVariablePress: () => void;
+}) {
+	return (
+		<div className="flex flex-wrap gap-1 items-center">
+			{variables.map((variable) => (
+				<Button
+					color="warning"
+					size="sm"
+					key={variable}
+					startContent={<LucideBraces className="size-3" />}
+					className="gap-1 h-6 px-2"
+					variant="flat"
+					onPress={() => onVariablePress()}
+				>
+					{variable}
+				</Button>
+			))}
+		</div>
+	);
+}
+
 function SystemMessage({
 	value,
 	onValueChange,
@@ -100,19 +127,29 @@ function SystemMessage({
 	onValueChange: (value: string) => void;
 	onVariablePress: () => void;
 }) {
+	const variables = useMemo(() => {
+		if (typeof value !== "string") return [];
+
+		const matches = value.matchAll(/\{\{(.*?)\}\}/g);
+		const vars = Array.from(matches).map((m) => m[1].trim());
+
+		return Array.from(new Set(vars));
+	}, [value]);
+
 	return (
 		<Card>
 			<CardHeader className="flex items-center justify-between pl-3 pr-1 h-10">
 				<span className="text-sm text-default-500">System</span>
 			</CardHeader>
-			<CardBody className="p-3 border-t border-default-200">
-				<VariablesTextArea
+			<CardBody className="p-3 border-t border-default-200 flex flex-col gap-4">
+				<TextareaAutosize
+					className="outline-none w-full resize-none text-sm"
 					placeholder="Enter system message..."
 					maxRows={1000000000000}
 					value={value}
 					onChange={(e) => onValueChange(e.target.value)}
-					onVariablePress={onVariablePress}
 				/>
+				<Variables variables={variables} onVariablePress={onVariablePress} />
 			</CardBody>
 		</Card>
 	);
@@ -129,6 +166,15 @@ function UserMessage({
 	) => void;
 	onVariablePress: () => void;
 }) {
+	const variables = useMemo(() => {
+		const str = JSON.stringify(value);
+
+		const matches = str.matchAll(/\{\{(.*?)\}\}/g);
+		const vars = Array.from(matches).map((m) => m[1].trim());
+
+		return Array.from(new Set(vars));
+	}, [value]);
+
 	return (
 		<Card>
 			<CardHeader className="flex items-center justify-between pl-3 pr-1 h-10">
@@ -148,38 +194,38 @@ function UserMessage({
 				{value.map((part, index) => {
 					if (part.type === "text") {
 						return (
-							<div key={`${index + 1}`}>
-								<div className="flex">
-									<VariablesTextArea
-										maxRows={1000000000000}
-										placeholder="Enter user message..."
-										value={part.text}
-										onChange={(e) => {
-											const newContent = [...value];
-											newContent[index] = { ...part, text: e.target.value };
-											onValueChange(newContent);
-										}}
-										onVariablePress={onVariablePress}
-									/>
-									<Button
-										className="-mr-2"
-										size="sm"
-										isIconOnly
-										variant="light"
-										onPress={() => {
-											const newContent = [...value];
-											newContent.splice(index, 1);
-											onValueChange(newContent);
-										}}
-									>
-										<LucideTrash className="size-3.5" />
-									</Button>
-								</div>
+							<div key={`${index + 1}`} className="flex">
+								<TextareaAutosize
+									className="outline-none w-full resize-none text-sm flex-1"
+									maxRows={1000000000000}
+									placeholder="Enter user message..."
+									value={part.text}
+									onChange={(e) => {
+										const newContent = [...value];
+										newContent[index] = { ...part, text: e.target.value };
+										onValueChange(newContent);
+									}}
+								/>
+								<Button
+									className="-mr-2"
+									size="sm"
+									isIconOnly
+									variant="light"
+									onPress={() => {
+										const newContent = [...value];
+										newContent.splice(index, 1);
+										onValueChange(newContent);
+									}}
+								>
+									<LucideTrash className="size-3.5" />
+								</Button>
 							</div>
 						);
 					}
+
 					return null;
 				})}
+				<Variables variables={variables} onVariablePress={onVariablePress} />
 			</CardBody>
 		</Card>
 	);
@@ -198,6 +244,15 @@ function AssistantMessage({
 	) => void;
 	onVariablePress: () => void;
 }) {
+	const variables = useMemo(() => {
+		const str = JSON.stringify(value);
+
+		const matches = str.matchAll(/\{\{(.*?)\}\}/g);
+		const vars = Array.from(matches).map((m) => m[1].trim());
+
+		return Array.from(new Set(vars));
+	}, [value]);
+
 	return (
 		<Card>
 			<CardHeader className="flex items-center justify-between pl-3 pr-1 h-10">
@@ -220,7 +275,8 @@ function AssistantMessage({
 					if (part.type === "text") {
 						return (
 							<div key={`${index + 1}`} className="flex">
-								<VariablesTextArea
+								<TextareaAutosize
+									className="outline-none w-full resize-none text-sm"
 									readOnly={isReadOnly}
 									maxRows={1000000000000}
 									placeholder="Enter assistant message..."
@@ -230,7 +286,6 @@ function AssistantMessage({
 										newContent[index] = { ...part, text: e.target.value };
 										onValueChange(newContent);
 									}}
-									onVariablePress={onVariablePress}
 								/>
 								{!isReadOnly && (
 									<Button
@@ -252,6 +307,7 @@ function AssistantMessage({
 					}
 					return null;
 				})}
+				<Variables variables={variables} onVariablePress={onVariablePress} />
 			</CardBody>
 		</Card>
 	);

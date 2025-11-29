@@ -247,6 +247,7 @@ function RouteComponent() {
 					data: {
 						model: form.getFieldValue("provider").model,
 						messages: form.getFieldValue("messages"),
+						variables: variableValues,
 					},
 				}),
 			});
@@ -314,7 +315,7 @@ function RouteComponent() {
 		} finally {
 			setIsRunning(false);
 		}
-	}, [form.getFieldValue]);
+	}, [form.getFieldValue, variableValues]);
 
 	const isLoading =
 		createMutation.isPending ||

@@ -10,6 +10,7 @@ import { type ModelMessage, stepCountIs, streamText, tool } from 'ai';
 import Fastify from 'fastify';
 import { z } from 'zod';
 import { getAIProvider } from './lib/providers.js';
+import { applyVariablesToMessages } from './lib/variables.js';
 
 
 // biome-ignore lint/style/noNonNullAssertion: <>
@@ -47,7 +48,7 @@ fastify.setNotFoundHandler((req, reply) => {
 
 // ... your API routes ...
 fastify.post('/api/test', async (request, reply) => {
-    const { provider_id, data } = request.body as { provider_id: string; data: { model: string, messages: ModelMessage[] } };
+    const { provider_id, data } = request.body as { provider_id: string; data: { model: string, messages: ModelMessage[], variables?: Record<string, string> } };
 
     if (!provider_id) {
         return reply.code(400).send({ message: 'provider_id is required' });
@@ -69,11 +70,13 @@ fastify.post('/api/test', async (request, reply) => {
         return reply.code(400).send({ message: `Unsupported provider type: ${provider.type}` });
     }
 
-    const { model, messages } = data;
+    const { model, messages, variables = {} } = data;
+
+    const processedMessages = JSON.parse(applyVariablesToMessages(JSON.stringify(messages), variables)) as ModelMessage[]
 
     const result = streamText({
         model: aiProvider(model),
-        messages,
+        messages: processedMessages,
         tools: {
             weather: tool({
                 description: 'Get the weather in a location',
