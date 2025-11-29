@@ -12,7 +12,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { TextStreamPart, Tool } from "ai";
 import { events } from "fetch-event-stream";
-import { LucideCornerUpLeft, LucideListPlus, LucidePlay } from "lucide-react";
+import {
+	LucideCornerUpLeft,
+	LucideListPlus,
+	LucideLoader2,
+	LucidePlay,
+} from "lucide-react";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
@@ -219,7 +224,11 @@ function RouteComponent() {
 
 			setGeneratedMessages([]);
 
-			const response = await fetch(`http://localhost:2223/api/test`, {
+			const url = import.meta.env.DEV
+				? "http://localhost:2223/api/test"
+				: "/api/test";
+
+			const response = await fetch(url, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -401,8 +410,14 @@ function RouteComponent() {
 							color="primary"
 							type="button"
 							onPress={handleRun}
-							isLoading={isRunning}
-							startContent={<LucidePlay className="size-4" />}
+							isDisabled={isRunning}
+							startContent={
+								isRunning ? (
+									<LucideLoader2 className="animate-spin size-4" />
+								) : (
+									<LucidePlay className="size-4" />
+								)
+							}
 						>
 							Run
 						</Button>
