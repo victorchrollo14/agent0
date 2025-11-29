@@ -7,7 +7,7 @@ import type { TextStreamPart, Tool } from "ai";
 import { stream } from "fetch-event-stream";
 import { LucideCornerUpLeft } from "lucide-react";
 import { nanoid } from "nanoid";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
@@ -40,12 +40,7 @@ function RouteComponent() {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const isNewAgent = agentId === "new";
-	const [generatedMessages, setGeneratedMessages] = useState<MessageT[]>([
-		{
-			role: "assistant",
-			content: [{ type: "text", text: "Generated response will appear here." }],
-		},
-	]);
+	const [generatedMessages, setGeneratedMessages] = useState<MessageT[]>([]);
 	const [isRunning, setIsRunning] = useState(false);
 
 	// Fetch available providers
@@ -58,8 +53,6 @@ function RouteComponent() {
 		...agentVersionsQuery(agentId),
 		enabled: !isNewAgent,
 	});
-
-	const latestVersion = versions?.[0]; // Versions are ordered by created_at desc
 
 	// Create mutation (creates both agent and first version)
 	const createMutation = useMutation({
@@ -148,29 +141,16 @@ function RouteComponent() {
 		},
 	});
 
+	const latestVersion = useMemo(() => versions?.[0], [versions]);
+
 	// Initialize TanStack Form
 	const form = useForm({
 		defaultValues: {
 			provider: {
-				id: latestVersion?.provider_id || "",
-				model: (latestVersion?.data as { model?: string } | null)?.model || "",
+				id: "",
+				model: "",
 			},
-			messages: (latestVersion?.data as { messages?: MessageT[] } | null)
-				?.messages || [
-				{
-					role: "system",
-					content: "",
-				},
-				{
-					role: "user",
-					content: [
-						{
-							type: "text",
-							text: "",
-						},
-					],
-				},
-			],
+			messages: [] as MessageT[],
 		},
 		validators: {
 			onChange: agentFormSchema,
@@ -183,6 +163,21 @@ function RouteComponent() {
 			}
 		},
 	});
+
+	useEffect(() => {
+		if (!latestVersion) {
+			return;
+		}
+
+		const data = latestVersion.data as {
+			model?: string;
+			messages?: MessageT[];
+		};
+
+		form.setFieldValue("provider.id", latestVersion.provider_id);
+		form.setFieldValue("provider.model", data.model || "");
+		form.setFieldValue("messages", data.messages || []);
+	}, [latestVersion, form.setFieldValue]);
 
 	const handleAddToConversation = useCallback(() => {
 		const newMessages = form.getFieldValue("messages").slice();
@@ -288,7 +283,7 @@ function RouteComponent() {
 				form.handleSubmit();
 			}}
 		>
-			<div className="mt-px w-full flex items-center justify-between p-4 h-16 border-b border-default-200 flex-shrink-0">
+			<div className="mt-px w-full flex items-center justify-between p-4 h-16 border-b border-default-200 shrink-0">
 				<p>Name</p>
 
 				<div className="flex items-center gap-2">
