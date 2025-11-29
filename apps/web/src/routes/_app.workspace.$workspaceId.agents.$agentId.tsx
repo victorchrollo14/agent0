@@ -21,7 +21,7 @@ import {
 	LucidePlay,
 } from "lucide-react";
 import { nanoid } from "nanoid";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import useDb from "use-db";
 import { z } from "zod";
 import {
@@ -256,15 +256,18 @@ function RouteComponent() {
 		};
 
 		setTimeout(() => {
-			form.reset({
-				provider: {
-					id: version.provider_id,
-					model: data.model || "",
+			form.reset(
+				{
+					provider: {
+						id: version.provider_id,
+						model: data.model || "",
+					},
+					messages: data.messages || [],
 				},
-				messages: data.messages || [],
-			});
+				{ keepDefaultValues: true },
+			);
 		}, 200);
-	}, [version, form.reset]);
+	}, [version, form]);
 
 	const handleAddToConversation = useCallback(() => {
 		const newMessages = form.getFieldValue("messages").slice();
@@ -365,7 +368,7 @@ function RouteComponent() {
 		} finally {
 			setIsRunning(false);
 		}
-	}, [form.getFieldValue, variableValues]);
+	}, [form, variableValues]);
 
 	return (
 		<form
