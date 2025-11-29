@@ -7,7 +7,7 @@ import {
 	DropdownTrigger,
 	useDisclosure,
 } from "@heroui/react";
-import type { Json } from "@repo/database";
+import type { Json, Tables } from "@repo/database";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -57,6 +57,7 @@ function RouteComponent() {
 	const isNewAgent = agentId === "new";
 	const [generatedMessages, setGeneratedMessages] = useState<MessageT[]>([]);
 	const [isRunning, setIsRunning] = useState(false);
+	const [version, setVersion] = useState<Tables<"versions">>();
 	const [name, setName] = useState("New Agent");
 	const [variableValues, setVariableValues] = useDb<Record<string, string>>(
 		`agent-variables-${agentId}`,
@@ -69,7 +70,7 @@ function RouteComponent() {
 		useDisclosure();
 
 	// Fetch agent
-	const { data: agent, isLoading: isLoadingAgent } = useQuery({
+	const { data: agent } = useQuery({
 		...agentQuery(agentId),
 		enabled: !isNewAgent,
 	});
@@ -80,15 +81,21 @@ function RouteComponent() {
 	}, [agent]);
 
 	// Fetch available providers
-	const { data: providers, isLoading: isLoadingProviders } = useQuery(
-		providersQuery(workspaceId),
-	);
+	const { data: providers } = useQuery(providersQuery(workspaceId));
 
 	// Fetch existing agent versions if editing
-	const { data: versions, isLoading: isLoadingVersions } = useQuery({
+	const { data: versions } = useQuery({
 		...agentVersionsQuery(agentId),
 		enabled: !isNewAgent,
 	});
+
+	useEffect(() => {
+		if (!versions || versions.length === 0) {
+			return;
+		}
+
+		setVersion(versions[0]);
+	}, [versions]);
 
 	// Create mutation (creates both agent and first version)
 	const createMutation = useMutation({
@@ -212,8 +219,6 @@ function RouteComponent() {
 		},
 	});
 
-	const latestVersion = useMemo(() => versions?.[0], [versions]);
-
 	// Initialize TanStack Form
 	const form = useForm({
 		defaultValues: {
@@ -241,19 +246,25 @@ function RouteComponent() {
 	});
 
 	useEffect(() => {
-		if (!latestVersion) {
+		if (!version) {
 			return;
 		}
 
-		const data = latestVersion.data as {
+		const data = version.data as {
 			model?: string;
 			messages?: MessageT[];
 		};
 
-		form.setFieldValue("provider.id", latestVersion.provider_id);
-		form.setFieldValue("provider.model", data.model || "");
-		form.setFieldValue("messages", data.messages || []);
-	}, [latestVersion, form.setFieldValue]);
+		setTimeout(() => {
+			form.reset({
+				provider: {
+					id: version.provider_id,
+					model: data.model || "",
+				},
+				messages: data.messages || [],
+			});
+		}, 200);
+	}, [version, form.reset]);
 
 	const handleAddToConversation = useCallback(() => {
 		const newMessages = form.getFieldValue("messages").slice();
@@ -374,6 +385,23 @@ function RouteComponent() {
 				/>
 
 				<div className="flex items-center gap-2">
+					<form.Subscribe
+						selector={(state) => ({
+							isDirty: state.isDirty,
+						})}
+					>
+						{(state) => {
+							if (state.isDirty) {
+								return <p className="text-sm text-default-500">Unsaved</p>;
+							}
+
+							return (
+								<p className="text-sm text-default-500">
+									#{version?.id.slice(-7)}
+								</p>
+							);
+						}}
+					</form.Subscribe>
 					<form.Subscribe selector={(state) => state.values.messages}>
 						{(messages) => (
 							<VariablesDrawer
