@@ -32,7 +32,7 @@ import {
 import { ProviderSelector } from "@/components/provider-selector";
 import { VariablesDrawer } from "@/components/variables-drawer";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { agentVersionsQuery, providersQuery } from "@/lib/queries";
+import { agentQuery, agentVersionsQuery, providersQuery } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute(
@@ -57,12 +57,24 @@ function RouteComponent() {
 	const isNewAgent = agentId === "new";
 	const [generatedMessages, setGeneratedMessages] = useState<MessageT[]>([]);
 	const [isRunning, setIsRunning] = useState(false);
+	const [name, setName] = useState("New Agent");
 	const [variableValues, setVariableValues] = useLocalStorage<
 		Record<string, string>
 	>(`agent-variables-${agentId}`, {});
 
 	const { isOpen: isVariablesOpen, onOpenChange: onVariablesOpenChange } =
 		useDisclosure();
+
+	// Fetch agent
+	const { data: agent, isLoading: isLoadingAgent } = useQuery({
+		...agentQuery(agentId),
+		enabled: !isNewAgent,
+	});
+
+	useEffect(() => {
+		if (!agent) return;
+		setName(agent.name);
+	}, [agent]);
 
 	// Fetch available providers
 	const { data: providers, isLoading: isLoadingProviders } = useQuery(
@@ -87,7 +99,7 @@ function RouteComponent() {
 			// Create agent
 			const { error: agentError } = await supabase.from("agents").insert({
 				id: newAgentId,
-				name: "",
+				name,
 				workspace_id: workspaceId,
 			});
 
@@ -157,7 +169,6 @@ function RouteComponent() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["agents", workspaceId] });
 			queryClient.invalidateQueries({ queryKey: ["agent-versions", agentId] });
-			queryClient.invalidateQueries({ queryKey: ["agent", agentId] });
 			addToast({
 				description: "New version created successfully.",
 				color: "success",
@@ -169,6 +180,30 @@ function RouteComponent() {
 					error instanceof Error
 						? error.message
 						: "Failed to create new version.",
+				color: "danger",
+			});
+		},
+	});
+
+	const updateNameMutation = useMutation({
+		mutationFn: async (name: string) => {
+			const { error } = await supabase
+				.from("agents")
+				.update({ name })
+				.eq("id", agentId);
+
+			if (error) throw error;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["agents", workspaceId] });
+			queryClient.invalidateQueries({ queryKey: ["agent", agentId] });
+		},
+		onError: (error) => {
+			addToast({
+				description:
+					error instanceof Error
+						? error.message
+						: "Failed to update agent name.",
 				color: "danger",
 			});
 		},
@@ -318,12 +353,6 @@ function RouteComponent() {
 		}
 	}, [form.getFieldValue, variableValues]);
 
-	const isLoading =
-		createMutation.isPending ||
-		updateMutation.isPending ||
-		isLoadingProviders ||
-		isLoadingVersions;
-
 	return (
 		<form
 			className="flex flex-col h-screen"
@@ -334,7 +363,12 @@ function RouteComponent() {
 			}}
 		>
 			<div className="mt-px w-full flex items-center justify-between p-4 h-16 border-b border-default-200 shrink-0">
-				<p>Name</p>
+				<input
+					className="w-full max-w-96 font-medium outline-none transition"
+					value={name}
+					onChange={(e) => setName(e.target.value)}
+					onBlur={() => updateNameMutation.mutate(name)}
+				/>
 
 				<div className="flex items-center gap-2">
 					<form.Subscribe selector={(state) => state.values.messages}>
@@ -366,10 +400,10 @@ function RouteComponent() {
 							<Button
 								type="submit"
 								color="primary"
-								isLoading={isLoading || state.isSubmitting}
-								isDisabled={!state.canSubmit || isLoading}
+								isLoading={state.isSubmitting}
+								isDisabled={!state.canSubmit}
 							>
-								{isNewAgent ? "Create Agent" : "Save New Version"}
+								{isNewAgent ? "Create" : "Update"}
 							</Button>
 						)}
 					</form.Subscribe>

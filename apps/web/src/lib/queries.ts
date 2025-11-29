@@ -44,6 +44,22 @@ export const agentsQuery = (workspaceId: string) => queryOptions({
     enabled: !!workspaceId,
 })
 
+export const agentQuery = (agentId: string) => queryOptions({
+    queryKey: ["agent", agentId],
+    queryFn: async () => {
+        const { data, error } = await supabase
+            .from("agents")
+            .select("*")
+            .eq("id", agentId)
+            .single();
+
+        if (error) throw error;
+
+        return data;
+    },
+    enabled: !!agentId,
+})
+
 export const agentVersionsQuery = (agentId: string) => queryOptions({
     queryKey: ["agent-versions", agentId],
     queryFn: async () => {
