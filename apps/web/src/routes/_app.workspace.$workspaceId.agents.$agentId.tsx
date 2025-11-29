@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import useDb from "use-db";
 import { z } from "zod";
 import {
 	type assistantMessageSchema,
@@ -31,7 +32,6 @@ import {
 } from "@/components/messages";
 import { ProviderSelector } from "@/components/provider-selector";
 import { VariablesDrawer } from "@/components/variables-drawer";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { agentQuery, agentVersionsQuery, providersQuery } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 
@@ -58,9 +58,12 @@ function RouteComponent() {
 	const [generatedMessages, setGeneratedMessages] = useState<MessageT[]>([]);
 	const [isRunning, setIsRunning] = useState(false);
 	const [name, setName] = useState("New Agent");
-	const [variableValues, setVariableValues] = useLocalStorage<
-		Record<string, string>
-	>(`agent-variables-${agentId}`, {});
+	const [variableValues, setVariableValues] = useDb<Record<string, string>>(
+		`agent-variables-${agentId}`,
+		{
+			defaultValue: {} as Record<string, string>,
+		},
+	);
 
 	const { isOpen: isVariablesOpen, onOpenChange: onVariablesOpenChange } =
 		useDisclosure();

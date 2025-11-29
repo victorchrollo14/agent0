@@ -113,6 +113,9 @@ importers:
       tailwindcss:
         specifier: ^4.0.6
         version: 4.1.17
+      use-db:
+        specifier: ^2.0.0
+        version: 2.0.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       zod:
         specifier: ^4.1.12
         version: 4.1.12
@@ -2822,6 +2825,10 @@ packages:
     resolution: {integrity: sha512-utfs7Pr5uJyyvDETitgsaqSyjCb2qNRAtuqUeWIAKztsOYdcACf2KtARYXg2pSvhkt+9NfoaNY7fxjl6nuMjIQ==}
     engines: {node: '>= 12.0.0'}
 
+  local-db-storage@2.0.0:
+    resolution: {integrity: sha512-twNHf1Wo+Xyrv7eN2FvQlIpUpttl+Gbf7mVAZxz0i+nzW9fL4nhyWvv4XMQI6rEnlgCj//liz77l2J/gL2A3RA==}
+    engines: {node: '>=16'}
+
   loupe@3.2.1:
     resolution: {integrity: sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ==}
 
@@ -3303,6 +3310,13 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  use-db@2.0.0:
+    resolution: {integrity: sha512-rr2dYY44kLfHJZYrprAUgObE8QkJGvGaT6hKlALF5ACeqaybCLsOjSDdWmoSPgSZO/8/cXr5p5QOvAFACycMYg==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
 
   use-isomorphic-layout-effect@1.2.1:
     resolution: {integrity: sha512-tpZZ+EX0gaghDAiFR37hj5MgY6ZN55kLiPkJsKxBMZ6GZdOSPJXiOzPM984oPYZ5AnehYx5WQp1+ME8I/P/pRA==}
@@ -6957,6 +6971,8 @@ snapshots:
       lightningcss-win32-arm64-msvc: 1.30.2
       lightningcss-win32-x64-msvc: 1.30.2
 
+  local-db-storage@2.0.0: {}
+
   loupe@3.2.1: {}
 
   lru-cache@11.2.2: {}
@@ -7374,6 +7390,12 @@ snapshots:
       react: 19.2.0
     optionalDependencies:
       '@types/react': 19.2.6
+
+  use-db@2.0.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+    dependencies:
+      local-db-storage: 2.0.0
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
 
   use-isomorphic-layout-effect@1.2.1(@types/react@19.2.6)(react@19.2.0):
     dependencies:
