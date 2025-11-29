@@ -1,10 +1,13 @@
 import {
+	Button,
 	Drawer,
 	DrawerBody,
 	DrawerContent,
+	DrawerFooter,
 	DrawerHeader,
 	Textarea,
 } from "@heroui/react";
+import { LucidePlay } from "lucide-react";
 import { useMemo } from "react";
 import type { MessageT } from "./messages";
 
@@ -14,6 +17,7 @@ interface VariablesDrawerProps {
 	messages: MessageT[];
 	values: Record<string, string>;
 	onValuesChange: (values: Record<string, string>) => void;
+	onRun?: () => void;
 }
 
 export function VariablesDrawer({
@@ -22,6 +26,7 @@ export function VariablesDrawer({
 	messages,
 	values,
 	onValuesChange,
+	onRun,
 }: VariablesDrawerProps) {
 	const variables = useMemo(() => {
 		const vars = new Set<string>();
@@ -51,28 +56,47 @@ export function VariablesDrawer({
 	return (
 		<Drawer isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">
 			<DrawerContent>
-				<DrawerHeader>Variables</DrawerHeader>
-				<DrawerBody>
-					<div className="flex flex-col gap-4">
-						{variables.length === 0 && (
-							<p className="text-default-500 text-sm">
-								No variables found in messages.
-							</p>
+				{(onClose) => (
+					<>
+						<DrawerHeader>Variables</DrawerHeader>
+						<DrawerBody>
+							<div className="flex flex-col gap-4">
+								{variables.length === 0 && (
+									<p className="text-default-500 text-sm">
+										No variables found in messages.
+									</p>
+								)}
+								{variables.map((variable) => (
+									<Textarea
+										maxRows={10}
+										key={variable}
+										label={variable}
+										placeholder={`Value for ${variable}`}
+										value={values[variable] || ""}
+										onValueChange={(val) =>
+											onValuesChange({ ...values, [variable]: val })
+										}
+									/>
+								))}
+							</div>
+						</DrawerBody>
+						{onRun && (
+							<DrawerFooter>
+								<Button
+									color="primary"
+									className="w-full"
+									startContent={<LucidePlay className="size-4" />}
+									onPress={() => {
+										onClose();
+										onRun();
+									}}
+								>
+									Run
+								</Button>
+							</DrawerFooter>
 						)}
-						{variables.map((variable) => (
-							<Textarea
-								maxRows={10}
-								key={variable}
-								label={variable}
-								placeholder={`Value for ${variable}`}
-								value={values[variable] || ""}
-								onValueChange={(val) =>
-									onValuesChange({ ...values, [variable]: val })
-								}
-							/>
-						))}
-					</div>
-				</DrawerBody>
+					</>
+				)}
 			</DrawerContent>
 		</Drawer>
 	);

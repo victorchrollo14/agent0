@@ -344,6 +344,7 @@ function RouteComponent() {
 								messages={messages}
 								values={variableValues}
 								onValuesChange={setVariableValues}
+								onRun={handleRun}
 							/>
 						)}
 					</form.Subscribe>
