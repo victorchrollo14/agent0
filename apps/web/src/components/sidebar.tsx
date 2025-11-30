@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
 	Bot,
-	Key,
+	KeySquare,
 	LayoutDashboard,
 	LucideChevronsUpDown,
 	LucidePlusSquare,
@@ -90,7 +90,7 @@ export function Sidebar({ workspaceId }: SidebarProps) {
 		if (isAdmin) {
 			items.push({
 				label: "API Keys",
-				icon: Key,
+				icon: KeySquare,
 				path: `/workspace/${workspaceId}/api-keys`,
 				active: location.pathname === `/workspace/${workspaceId}/api-keys`,
 			});

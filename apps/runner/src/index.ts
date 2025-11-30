@@ -46,8 +46,9 @@ fastify.setNotFoundHandler((req, reply) => {
     }
 });
 
-// ... your API routes ...
-fastify.post('/api/test', async (request, reply) => {
+// API Routes
+// Test API endpoint (for development/testing purposes)
+fastify.post('/api/v1/test', async (request, reply) => {
     const { provider_id, data } = request.body as { provider_id: string; data: { model: string, messages: ModelMessage[], variables?: Record<string, string> } };
 
     if (!provider_id) {
@@ -120,6 +121,152 @@ fastify.post('/api/test', async (request, reply) => {
     });
 
     return reply.send(stream);
+});
+
+// Run API endpoint (for production use with API key authentication)
+fastify.post('/api/v1/run', async (request, reply) => {
+    const { agent_id, variables = {}, stream = false } = request.body as {
+        agent_id: string;
+        variables?: Record<string, string>;
+        stream?: boolean;
+    };
+
+    // Validate request body
+    if (!agent_id) {
+        return reply.code(400).send({ message: 'agent_id is required' });
+    }
+
+    // Extract and validate API key from headers
+    const apiKey = request.headers['x-api-key'] as string;
+    if (!apiKey) {
+        return reply.code(401).send({ message: 'API key is required' });
+    }
+
+    // Verify API key exists and get workspace
+    const { data: apiKeyData, error: apiKeyError } = await supabase
+        .from('api_keys')
+        .select('workspace_id')
+        .eq('id', apiKey)
+        .single();
+
+    if (apiKeyError || !apiKeyData) {
+        return reply.code(401).send({ message: 'Invalid API key' });
+    }
+
+    // Get agent and verify it belongs to the same workspace
+    const { data: agent, error: agentError } = await supabase
+        .from('agents')
+        .select('workspace_id')
+        .eq('id', agent_id)
+        .single();
+
+    if (agentError || !agent) {
+        return reply.code(404).send({ message: 'Agent not found' });
+    }
+
+    // Verify workspace access
+    if (agent.workspace_id !== apiKeyData.workspace_id) {
+        return reply.code(403).send({ message: 'Access denied to this agent' });
+    }
+
+    // Get the deployed version of the agent
+    const { data: version, error: versionError } = await supabase
+        .from('versions')
+        .select('*, providers(*)')
+        .eq('agent_id', agent_id)
+        .eq('is_deployed', true)
+        .single();
+
+    if (versionError || !version) {
+        return reply.code(404).send({ message: 'No deployed version found for this agent' });
+    }
+
+    // Extract version data
+    const versionData = version.data as { model?: string; messages?: ModelMessage[] };
+    const messages = versionData.messages || [];
+    const model = versionData.model;
+
+    if (!model || messages.length === 0) {
+        return reply.code(400).send({ message: 'Agent configuration is invalid' });
+    }
+
+    // Get provider from the version
+    const provider = version.providers;
+    if (!provider) {
+        return reply.code(404).send({ message: 'Provider not found' });
+    }
+
+    const aiProvider = getAIProvider(provider.type, provider.data);
+    if (!aiProvider) {
+        return reply.code(400).send({ message: `Unsupported provider type: ${provider.type}` });
+    }
+
+    // Apply variables to messages
+    const processedMessages = JSON.parse(
+        applyVariablesToMessages(JSON.stringify(messages), variables)
+    ) as ModelMessage[];
+
+
+    const tools = {
+        weather: tool({
+            description: 'Get the weather in a location',
+            inputSchema: z.object({
+                location: z.string().describe('The location to get the weather for'),
+            }),
+            execute: async ({ location }) => ({
+                location,
+                temperature: 72 + Math.floor(Math.random() * 21) - 10,
+            }),
+        }),
+    }
+
+    // Create AI stream
+    const result = streamText({
+        model: aiProvider(model),
+        messages: processedMessages,
+        tools,
+        stopWhen: stepCountIs(5),
+    });
+
+    // Handle streaming response
+    if (stream) {
+        const encoder = new TextEncoder();
+
+        const streamResponse = new ReadableStream({
+            async start(controller) {
+                try {
+                    for await (const part of result.fullStream) {
+                        controller.enqueue(
+                            encoder.encode(`data: ${JSON.stringify(part)}\r\n\r\n`),
+                        );
+                    }
+                } catch (err) {
+                    console.error("Streaming error", err);
+                    controller.error(err);
+                } finally {
+                    controller.close();
+                }
+            },
+        });
+
+        reply.headers({
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+        });
+
+        return reply.send(streamResponse);
+    }
+
+    // Handle non-streaming response
+    try {
+        const steps = await result.steps;
+
+        return reply.send({ messages: steps.map(step => ({ role: 'assistant', content: step.content })) });
+    } catch (err) {
+        console.error("Error processing agent run", err);
+        return reply.code(500).send({ message: 'Error processing agent run' });
+    }
 });
 
 const start = async () => {

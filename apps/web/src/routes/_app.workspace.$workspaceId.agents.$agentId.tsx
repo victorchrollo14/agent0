@@ -291,8 +291,8 @@ function RouteComponent() {
 			setGeneratedMessages([]);
 
 			const url = import.meta.env.DEV
-				? "http://localhost:2223/api/test"
-				: "/api/test";
+				? "http://localhost:2223/api/v1/test"
+				: "/api/v1/test";
 
 			const response = await fetch(url, {
 				method: "POST",
