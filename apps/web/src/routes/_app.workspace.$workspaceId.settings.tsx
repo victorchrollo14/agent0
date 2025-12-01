@@ -43,29 +43,6 @@ function SettingsPage() {
 		if (workspace) setName(workspace.name);
 	}, [workspace]);
 
-	// Check if current user is admin
-	const { data: isAdmin, isLoading: isAdminLoading } = useQuery({
-		queryKey: ["workspace-role", workspaceId],
-		queryFn: async () => {
-			const {
-				data: { user },
-			} = await supabase.auth.getUser();
-			if (!user) return false;
-
-			const { data, error } = await supabase
-				.from("workspace_user")
-				.select("role")
-				.eq("workspace_id", workspaceId)
-				.eq("user_id", user.id)
-				.single();
-
-			if (error) return false;
-
-			return data?.role === "admin";
-		},
-		enabled: !!workspaceId,
-	});
-
 	const {
 		isOpen: isDeleteWorkspaceOpen,
 		onOpen: onDeleteWorkspaceOpen,
@@ -157,13 +134,6 @@ function SettingsPage() {
 			});
 		},
 	});
-
-	if (!isAdmin)
-		return (
-			<div className="p-6 text-default-500">
-				<p>You do not have permission to view this page.</p>
-			</div>
-		);
 
 	return (
 		<div className="p-6 max-w-4xl mx-auto space-y-6">
