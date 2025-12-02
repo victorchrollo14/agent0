@@ -22,6 +22,7 @@ import { events } from "fetch-event-stream";
 import {
 	LucideBraces,
 	LucideChevronDown,
+	LucideCopy,
 	LucideCornerUpLeft,
 	LucideHistory,
 	LucideListPlus,
@@ -42,6 +43,7 @@ import {
 } from "@/components/messages";
 import { ProviderSelector } from "@/components/provider-selector";
 import { VariablesDrawer } from "@/components/variables-drawer";
+import { copyToClipboard } from "@/lib/clipboard";
 import { agentQuery, agentVersionsQuery, providersQuery } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 
@@ -470,6 +472,18 @@ function RouteComponent() {
 							);
 						}}
 					</form.Subscribe>
+
+					{agent && (
+						<Button
+							size="sm"
+							variant="flat"
+							startContent={<LucideCopy className="size-3.5" />}
+							onPress={() => copyToClipboard(agent.id)}
+						>
+							{agent.id}
+						</Button>
+					)}
+
 					<HistoryDrawer
 						isOpen={isHistoryOpen}
 						onOpenChange={onHistoryOpenChange}
@@ -482,10 +496,11 @@ function RouteComponent() {
 					{versions?.length && (
 						<Button
 							isIconOnly
+							size="sm"
 							variant="flat"
 							onPress={() => onHistoryOpenChange()}
 						>
-							<LucideHistory className="size-4" />
+							<LucideHistory className="size-3.5" />
 						</Button>
 					)}
 
@@ -503,6 +518,7 @@ function RouteComponent() {
 					</form.Subscribe>
 					<Button
 						isIconOnly
+						size="sm"
 						variant="flat"
 						onPress={() => onVariablesOpenChange()}
 					>
@@ -521,6 +537,7 @@ function RouteComponent() {
 							if (isNewAgent) {
 								return (
 									<Button
+										size="sm"
 										color="primary"
 										isLoading={state.isSubmitting}
 										isDisabled={!state.canSubmit}
@@ -532,7 +549,7 @@ function RouteComponent() {
 							}
 
 							return (
-								<ButtonGroup>
+								<ButtonGroup size="sm">
 									<Button
 										color="primary"
 										isLoading={

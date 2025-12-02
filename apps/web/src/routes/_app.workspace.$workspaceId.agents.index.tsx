@@ -1,4 +1,5 @@
 import {
+	addToast,
 	Button,
 	Dropdown,
 	DropdownItem,
@@ -13,7 +14,9 @@ import {
 } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LucideEllipsisVertical, Plus } from "lucide-react";
+import { format } from "date-fns";
+import { LucideCopy, LucideEllipsisVertical, Plus } from "lucide-react";
+import { copyToClipboard } from "@/lib/clipboard";
 import { agentsQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceId/agents/")({
@@ -51,6 +54,7 @@ function RouteComponent() {
 			</div>
 
 			<Table
+				aria-label="Agents"
 				onRowAction={(key) => {
 					console.log("ROW", key);
 					if (!key) return;
@@ -63,6 +67,8 @@ function RouteComponent() {
 			>
 				<TableHeader>
 					<TableColumn>Name</TableColumn>
+					<TableColumn>ID</TableColumn>
+					<TableColumn>Created At</TableColumn>
 					<TableColumn className="w-20" hideHeader>
 						Actions
 					</TableColumn>
@@ -75,6 +81,20 @@ function RouteComponent() {
 					{(item) => (
 						<TableRow key={item.id} className="hover:bg-default-100">
 							<TableCell>{item.name}</TableCell>
+							<TableCell>
+								<div className="flex gap-1 items-center">
+									<span className="text-xs font-mono">{item.id}</span>
+									<Button
+										variant="light"
+										size="sm"
+										isIconOnly
+										onPress={() => copyToClipboard(item.id)}
+									>
+										<LucideCopy className="size-3.5" />
+									</Button>
+								</div>
+							</TableCell>
+							<TableCell>{format(item.created_at, "d LLL, hh:mm a")}</TableCell>
 							<TableCell className="flex justify-end">
 								<Dropdown>
 									<DropdownTrigger>

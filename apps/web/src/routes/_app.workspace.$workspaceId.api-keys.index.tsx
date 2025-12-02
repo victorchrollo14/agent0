@@ -16,8 +16,9 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Check, Copy, LucideEllipsisVertical, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { LucideCopy, LucideEllipsisVertical, Plus } from "lucide-react";
+import { useMemo } from "react";
+import { copyToClipboard } from "@/lib/clipboard";
 import { apiKeysQuery, workspacesQuery } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 
@@ -29,7 +30,6 @@ function RouteComponent() {
 	const { workspaceId } = Route.useParams();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-	const [copiedId, setCopiedId] = useState<string | null>(null);
 
 	// Fetch API Keys
 	const { data: apiKeys, isLoading } = useQuery(apiKeysQuery(workspaceId));
@@ -64,23 +64,6 @@ function RouteComponent() {
 			});
 		},
 	});
-
-	const handleCopy = async (keyId: string, plainKey: string) => {
-		try {
-			await navigator.clipboard.writeText(plainKey);
-			setCopiedId(keyId);
-			addToast({
-				description: "API key copied to clipboard",
-				color: "success",
-			});
-			setTimeout(() => setCopiedId(null), 2000);
-		} catch {
-			addToast({
-				description: "Failed to copy API key",
-				color: "danger",
-			});
-		}
-	};
 
 	const redactKey = (key: string) => {
 		if (!key) return "••••••••••••••••";
@@ -144,13 +127,9 @@ function RouteComponent() {
 											isIconOnly
 											size="sm"
 											variant="light"
-											onPress={() => handleCopy(item.id, item.id)}
+											onPress={() => copyToClipboard(item.id)}
 										>
-											{copiedId === item.id ? (
-												<Check className="size-4 text-success" />
-											) : (
-												<Copy className="size-4" />
-											)}
+											<LucideCopy className="size-3.5" />
 										</Button>
 									</div>
 								</TableCell>

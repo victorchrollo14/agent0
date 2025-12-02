@@ -13,7 +13,9 @@ import {
 } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { format } from "date-fns";
 import { LucideEllipsisVertical, Plus } from "lucide-react";
+import { PROVIDER_TYPES } from "@/lib/providers";
 import { providersQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceId/providers/")(
@@ -65,6 +67,8 @@ function RouteComponent() {
 			>
 				<TableHeader>
 					<TableColumn>Name</TableColumn>
+					<TableColumn>Type</TableColumn>
+					<TableColumn>Last Updated</TableColumn>
 					<TableColumn className="w-20" hideHeader>
 						Actions
 					</TableColumn>
@@ -74,28 +78,36 @@ function RouteComponent() {
 					isLoading={isLoading}
 					emptyContent="You haven't added any providers yet."
 				>
-					{(item) => (
-						<TableRow key={item.id} className="hover:bg-default-100">
-							<TableCell>{item.name}</TableCell>
-							<TableCell className="flex justify-end">
-								<Dropdown>
-									<DropdownTrigger>
-										<Button isIconOnly variant="light">
-											<LucideEllipsisVertical className="size-4" />
-										</Button>
-									</DropdownTrigger>
-									<DropdownMenu>
-										<DropdownItem
-											key={item.id}
-											onPress={() => navigate({ to: item.id })}
-										>
-											Edit
-										</DropdownItem>
-									</DropdownMenu>
-								</Dropdown>
-							</TableCell>
-						</TableRow>
-					)}
+					{(item) => {
+						const provider = PROVIDER_TYPES.find((p) => p.key === item.type);
+
+						return (
+							<TableRow key={item.id} className="hover:bg-default-100">
+								<TableCell>{item.name}</TableCell>
+								<TableCell>{provider?.label}</TableCell>
+								<TableCell>
+									{format(item.updated_at, "d LLL, hh:mm a")}
+								</TableCell>
+								<TableCell className="flex justify-end">
+									<Dropdown>
+										<DropdownTrigger>
+											<Button isIconOnly variant="light">
+												<LucideEllipsisVertical className="size-4" />
+											</Button>
+										</DropdownTrigger>
+										<DropdownMenu>
+											<DropdownItem
+												key={item.id}
+												onPress={() => navigate({ to: item.id })}
+											>
+												Edit
+											</DropdownItem>
+										</DropdownMenu>
+									</Dropdown>
+								</TableCell>
+							</TableRow>
+						);
+					}}
 				</TableBody>
 			</Table>
 		</div>

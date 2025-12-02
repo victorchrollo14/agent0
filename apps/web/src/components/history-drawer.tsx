@@ -70,7 +70,7 @@ export const HistoryDrawer = ({
 										</Chip>
 									)}
 								</CardHeader>
-								<CardBody className="gap-2">
+								<CardBody className="gap-2 flex flex-col items-start">
 									<p className="text-sm">
 										{format(version.created_at, "d LLL, hh:mm a")}
 									</p>
