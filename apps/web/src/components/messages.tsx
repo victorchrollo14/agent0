@@ -218,16 +218,17 @@ function UserMessage({
 		<Card>
 			<CardHeader className="flex items-center justify-between pl-3 pr-1 h-10">
 				<span className="text-sm text-default-500">User</span>
-				<div className="flex gap-2">
-					<Button
-						size="sm"
-						isIconOnly
-						variant="light"
-						onPress={() => onValueChange(null)}
-					>
-						<LucideTrash2 className="size-3.5" />
-					</Button>
-				</div>
+				<Dropdown>
+					<DropdownTrigger>
+						<Button isDisabled size="sm" isIconOnly variant="light">
+							<LucidePlus className="size-3.5" />
+						</Button>
+					</DropdownTrigger>
+					<DropdownMenu>
+						<DropdownItem key="image">Image</DropdownItem>
+						<DropdownItem key="file">File</DropdownItem>
+					</DropdownMenu>
+				</Dropdown>
 			</CardHeader>
 			<CardBody className="p-3 border-t border-default-200 flex flex-col gap-2">
 				{value.map((part, index) => {
@@ -372,66 +373,59 @@ function AssistantMessage({
 			<CardHeader className="flex items-center justify-between pl-3 pr-1 h-10">
 				<span className="text-sm text-default-500">Assistant</span>
 				{!isReadOnly && (
-					<div className="flex gap-2">
-						<Dropdown>
-							<DropdownTrigger>
-								<Button
-									size="sm"
-									isIconOnly
-									variant="light"
-									onPress={() => onValueChange(null)}
-								>
-									<LucidePlus className="size-3.5" />
-								</Button>
-							</DropdownTrigger>
-							<DropdownMenu>
-								<DropdownItem
-									key="text"
-									onPress={() =>
-										onValueChange([
-											...value,
-											{
-												type: "text",
-												text: "",
-											},
-										])
-									}
-								>
-									Text Part
-								</DropdownItem>
-								<DropdownItem
-									key="reasoning"
-									onPress={() =>
-										onValueChange([
-											...value,
-											{
-												type: "reasoning",
-												text: "",
-											},
-										])
-									}
-								>
-									Reasoning Part
-								</DropdownItem>
-								<DropdownItem
-									key="tool-call"
-									onPress={() =>
-										onValueChange([
-											...value,
-											{
-												type: "tool-call",
-												toolCallId: "",
-												toolName: "",
-												input: {},
-											},
-										])
-									}
-								>
-									Tool Call Part
-								</DropdownItem>
-							</DropdownMenu>
-						</Dropdown>
-					</div>
+					<Dropdown>
+						<DropdownTrigger>
+							<Button size="sm" isIconOnly variant="light">
+								<LucidePlus className="size-3.5" />
+							</Button>
+						</DropdownTrigger>
+						<DropdownMenu>
+							<DropdownItem
+								key="text"
+								onPress={() =>
+									onValueChange([
+										...value,
+										{
+											type: "text",
+											text: "",
+										},
+									])
+								}
+							>
+								Text Part
+							</DropdownItem>
+							<DropdownItem
+								key="reasoning"
+								onPress={() =>
+									onValueChange([
+										...value,
+										{
+											type: "reasoning",
+											text: "",
+										},
+									])
+								}
+							>
+								Reasoning Part
+							</DropdownItem>
+							<DropdownItem
+								key="tool-call"
+								onPress={() =>
+									onValueChange([
+										...value,
+										{
+											type: "tool-call",
+											toolCallId: "",
+											toolName: "",
+											input: {},
+										},
+									])
+								}
+							>
+								Tool Call Part
+							</DropdownItem>
+						</DropdownMenu>
+					</Dropdown>
 				)}
 			</CardHeader>
 			<CardBody className="p-3 border-t border-default-200 flex flex-col gap-3">
