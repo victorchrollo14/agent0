@@ -1,5 +1,4 @@
 import {
-	Avatar,
 	Card,
 	CardBody,
 	CardHeader,
@@ -8,6 +7,7 @@ import {
 	DrawerBody,
 	DrawerContent,
 	DrawerHeader,
+	User,
 } from "@heroui/react";
 import type { Tables } from "@repo/database";
 import { useQuery } from "@tanstack/react-query";
@@ -74,15 +74,14 @@ export const HistoryDrawer = ({
 									<p className="text-sm">
 										{format(version.created_at, "d LLL, hh:mm a")}
 									</p>
-									<div className="flex gap-2 items-center">
-										<Avatar
-											size="sm"
-											src={`https://api.dicebear.com/9.x/initials/svg?seed=${user?.name}`}
-											fallback={user?.name?.slice(0, 1)}
-										/>
-
-										<p className="text-sm">{user?.name}</p>
-									</div>
+									<User
+										name={user?.name}
+										avatarProps={{
+											size: "sm",
+											src: `https://api.dicebear.com/9.x/initials/svg?seed=${user?.name}`,
+											fallback: user?.name?.slice(0, 1),
+										}}
+									/>
 								</CardBody>
 							</Card>
 						);

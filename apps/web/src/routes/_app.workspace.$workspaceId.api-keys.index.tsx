@@ -1,5 +1,4 @@
 import {
-	Avatar,
 	addToast,
 	Button,
 	Dropdown,
@@ -12,6 +11,7 @@ import {
 	TableColumn,
 	TableHeader,
 	TableRow,
+	User,
 } from "@heroui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -158,14 +158,14 @@ function RouteComponent() {
 									{format(item.created_at, "d LLL, hh:mm a")}
 								</TableCell>
 								<TableCell>
-									<div className="flex gap-2 items-center">
-										<Avatar
-											size="sm"
-											src={`https://api.dicebear.com/9.x/initials/svg?seed=${user?.name}`}
-											fallback={user?.name?.slice(0, 1)}
-										/>
-										<p>{user?.name}</p>
-									</div>
+									<User
+										name={user?.name}
+										avatarProps={{
+											size: "sm",
+											src: `https://api.dicebear.com/9.x/initials/svg?seed=${user?.name}`,
+											fallback: user?.name?.slice(0, 1),
+										}}
+									/>
 								</TableCell>
 								<TableCell className="flex justify-end">
 									<Dropdown>
