@@ -599,7 +599,7 @@ function RouteComponent() {
 			</div>
 			<div className="flex flex-1 overflow-hidden">
 				<div className="flex-1 flex flex-col border-r border-default-200 min-h-0">
-					<div className="flex-1 overflow-y-auto p-4 space-y-4">
+					<div className="flex gap-2 justify-between items-center p-4 border-b border-default-200">
 						<div className="flex gap-2">
 							<form.Field name="providers">
 								{(field) => (
@@ -669,7 +669,24 @@ function RouteComponent() {
 								</PopoverContent>
 							</Popover>
 						</div>
-
+						<Button
+							size="sm"
+							color="primary"
+							type="button"
+							onPress={handleRun}
+							isDisabled={isRunning}
+							startContent={
+								isRunning ? (
+									<LucideLoader2 className="animate-spin size-3.5" />
+								) : (
+									<LucidePlay className="size-3.5" />
+								)
+							}
+						>
+							Run
+						</Button>
+					</div>
+					<div className="flex-1 overflow-y-auto p-4 space-y-4">
 						<form.Field name="messages" mode="array">
 							{(field) => (
 								<Messages
@@ -679,13 +696,12 @@ function RouteComponent() {
 								/>
 							)}
 						</form.Field>
-					</div>
-					<div className="flex justify-between items-center p-4 border-t border-default-200">
 						<Dropdown placement="top-start">
 							<DropdownTrigger>
 								<Button
+									size="sm"
 									variant="flat"
-									startContent={<LucideListPlus className="size-4" />}
+									startContent={<LucideListPlus className="size-3.5" />}
 								>
 									Add
 								</Button>
@@ -718,21 +734,6 @@ function RouteComponent() {
 								/>
 							</DropdownMenu>
 						</Dropdown>
-						<Button
-							color="primary"
-							type="button"
-							onPress={handleRun}
-							isDisabled={isRunning}
-							startContent={
-								isRunning ? (
-									<LucideLoader2 className="animate-spin size-4" />
-								) : (
-									<LucidePlay className="size-4" />
-								)
-							}
-						>
-							Run
-						</Button>
 					</div>
 				</div>
 
@@ -752,8 +753,9 @@ function RouteComponent() {
 					<div>
 						{!isRunning && generatedMessages.length > 0 && (
 							<Button
+								size="sm"
 								variant="flat"
-								startContent={<LucideCornerUpLeft className="size-4" />}
+								startContent={<LucideCornerUpLeft className="size-3.5" />}
 								onPress={handleAddToConversation}
 							>
 								Add to conversation
