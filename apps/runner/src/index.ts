@@ -46,7 +46,7 @@ fastify.setNotFoundHandler((req, reply) => {
 });
 
 type VersionData = {
-    providers: { id: string; model: string }[];
+    model: { provider_id: string; name: string };
     messages: ModelMessage[],
     maxOutputTokens?: number,
     outputFormat?: "text" | "json",
@@ -56,57 +56,39 @@ type VersionData = {
 
 // Helper to prepare provider and messages - shared logic between generate and stream
 const prepareProviderAndMessages = async (data: VersionData, variables: Record<string, string>) => {
-    const { providers, messages } = data;
+    const { model, messages } = data;
 
-    const { data: availableProviders, error: availableProvidersError } = await supabase
+    const { data: provider, error: providerError } = await supabase
         .from("providers")
         .select("*")
-        .in("id", providers.map(p => p.id))
+        .eq("id", model.provider_id).single();
 
-    if (availableProvidersError) {
-        throw availableProvidersError;
+    if (providerError) {
+        throw providerError;
     }
 
-    if (availableProviders.length === 0) {
-        throw new Error("No valid providers found")
-    }
 
-    const providersHydrated = providers.map(p => {
-        const availableProvider = availableProviders.find(ap => ap.id === p.id);
-
-        if (!availableProvider) {
-            throw new Error(`Provider ${p.id} not found`);
-        }
-
-        return {
-            ...p,
-            ...availableProvider,
-        }
-    });
-
-    const randomProvider = providersHydrated[Math.floor(Math.random() * providersHydrated.length)];
-
-    const aiProvider = getAIProvider(randomProvider.type, randomProvider.data);
+    const aiProvider = getAIProvider(provider.type, provider.data);
 
     if (!aiProvider) {
-        throw new Error(`Unsupported provider type: ${randomProvider.type}`);
+        throw new Error(`Unsupported provider type: ${provider.type}`);
     }
 
     const processedMessages = JSON.parse(applyVariablesToMessages(JSON.stringify(messages), variables)) as ModelMessage[]
 
     return {
-        aiProvider,
-        randomProvider,
+        model: aiProvider(model.name),
+        provider,
         processedMessages
     };
 }
 
 const generateResult = async (data: VersionData, variables: Record<string, string>) => {
     const { maxOutputTokens, outputFormat, temperature, maxStepCount } = data
-    const { aiProvider, randomProvider, processedMessages } = await prepareProviderAndMessages(data, variables);
+    const { model, processedMessages } = await prepareProviderAndMessages(data, variables);
 
     const result = generateText({
-        model: aiProvider(randomProvider.model),
+        model,
         maxOutputTokens,
         temperature,
         stopWhen: stepCountIs(maxStepCount || 10),
@@ -119,10 +101,10 @@ const generateResult = async (data: VersionData, variables: Record<string, strin
 
 const streamResult = async (data: VersionData, variables: Record<string, string>) => {
     const { maxOutputTokens, outputFormat, temperature, maxStepCount } = data
-    const { aiProvider, randomProvider, processedMessages } = await prepareProviderAndMessages(data, variables);
+    const { model, processedMessages } = await prepareProviderAndMessages(data, variables);
 
     const result = streamText({
-        model: aiProvider(randomProvider.model),
+        model,
         maxOutputTokens,
         temperature,
         stopWhen: stepCountIs(maxStepCount || 10),

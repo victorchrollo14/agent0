@@ -47,7 +47,7 @@ import {
 	type MessageT,
 	messageSchema,
 } from "@/components/messages";
-import { ProviderSelector } from "@/components/provider-selector";
+import { ModelSelector } from "@/components/model-selector";
 import { VariablesDrawer } from "@/components/variables-drawer";
 import { copyToClipboard } from "@/lib/clipboard";
 import { agentQuery, agentVersionsQuery, providersQuery } from "@/lib/queries";
@@ -61,12 +61,10 @@ export const Route = createFileRoute(
 
 // Zod schema for form validation
 const agentFormSchema = z.object({
-	providers: z.array(
-		z.object({
-			id: z.string(),
-			model: z.string(),
-		}),
-	),
+	model: z.object({
+		provider_id: z.string(),
+		name: z.string(),
+	}),
 	maxOutputTokens: z.number(),
 	outputFormat: z.enum(["text", "json"]),
 	temperature: z.number(),
@@ -150,7 +148,7 @@ function RouteComponent() {
 				id: newVersionId,
 				agent_id: newAgentId,
 				data: {
-					providers: values.providers,
+					model: values.model,
 					maxOutputTokens: values.maxOutputTokens,
 					outputFormat: values.outputFormat,
 					temperature: values.temperature,
@@ -196,7 +194,7 @@ function RouteComponent() {
 					id: newVersionId,
 					agent_id: agentId,
 					data: {
-						providers: values.providers,
+						model: values.model,
 						maxOutputTokens: values.maxOutputTokens,
 						outputFormat: values.outputFormat,
 						temperature: values.temperature,
@@ -296,7 +294,7 @@ function RouteComponent() {
 	// Initialize TanStack Form
 	const form = useForm({
 		defaultValues: {
-			providers: [] as { id: string; model: string }[],
+			model: { provider_id: "", name: "" },
 			maxOutputTokens: 2048,
 			outputFormat: "text" as "text" | "json",
 			temperature: 0.7,
@@ -332,7 +330,7 @@ function RouteComponent() {
 		}
 
 		const data = version.data as {
-			providers?: [];
+			model: { provider_id: string; name: string };
 			maxOutputTokens?: number;
 			outputFormat?: "text" | "json";
 			temperature?: number;
@@ -343,7 +341,7 @@ function RouteComponent() {
 		setTimeout(() => {
 			form.reset(
 				{
-					providers: data.providers || [],
+					model: data.model || { provider_id: "", name: "" },
 					maxOutputTokens: data.maxOutputTokens || 2048,
 					outputFormat: data.outputFormat || "text",
 					temperature: data.temperature || 0.7,
@@ -664,11 +662,11 @@ function RouteComponent() {
 				<div className="flex-1 flex flex-col border-r border-default-200 min-h-0">
 					<div className="flex gap-2 justify-between items-center p-4 border-b border-default-200">
 						<div className="flex gap-2">
-							<form.Field name="providers">
+							<form.Field name="model">
 								{(field) => (
-									<ProviderSelector
+									<ModelSelector
 										value={field.state.value}
-										onChange={field.handleChange}
+										onValueChange={field.handleChange}
 										providers={providers || []}
 										isInvalid={field.state.meta.errors.length > 0}
 									/>
