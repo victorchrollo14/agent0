@@ -54,8 +54,9 @@ type VersionData = {
     maxStepCount?: number,
 };
 
-const generateResult = async (data: VersionData, variables: Record<string, string>) => {
-    const { providers, messages, maxOutputTokens, outputFormat, temperature, maxStepCount } = data
+// Helper to prepare provider and messages - shared logic between generate and stream
+const prepareProviderAndMessages = async (data: VersionData, variables: Record<string, string>) => {
+    const { providers, messages } = data;
 
     const { data: availableProviders, error: availableProvidersError } = await supabase
         .from("providers")
@@ -92,6 +93,17 @@ const generateResult = async (data: VersionData, variables: Record<string, strin
     }
 
     const processedMessages = JSON.parse(applyVariablesToMessages(JSON.stringify(messages), variables)) as ModelMessage[]
+
+    return {
+        aiProvider,
+        randomProvider,
+        processedMessages
+    };
+}
+
+const generateResult = async (data: VersionData, variables: Record<string, string>) => {
+    const { maxOutputTokens, outputFormat, temperature, maxStepCount } = data
+    const { aiProvider, randomProvider, processedMessages } = await prepareProviderAndMessages(data, variables);
 
     const result = generateText({
         model: aiProvider(randomProvider.model),
@@ -106,43 +118,8 @@ const generateResult = async (data: VersionData, variables: Record<string, strin
 }
 
 const streamResult = async (data: VersionData, variables: Record<string, string>) => {
-    const { providers, messages, maxOutputTokens, outputFormat, temperature, maxStepCount } = data
-
-    const { data: availableProviders, error: availableProvidersError } = await supabase
-        .from("providers")
-        .select("*")
-        .in("id", providers.map(p => p.id))
-
-    if (availableProvidersError) {
-        throw availableProvidersError;
-    }
-
-    if (availableProviders.length === 0) {
-        throw new Error("No valid providers found")
-    }
-
-    const providersHydrated = providers.map(p => {
-        const availableProvider = availableProviders.find(ap => ap.id === p.id);
-
-        if (!availableProvider) {
-            throw new Error(`Provider ${p.id} not found`);
-        }
-
-        return {
-            ...p,
-            ...availableProvider,
-        }
-    });
-
-    const randomProvider = providersHydrated[Math.floor(Math.random() * providersHydrated.length)];
-
-    const aiProvider = getAIProvider(randomProvider.type, randomProvider.data);
-
-    if (!aiProvider) {
-        throw new Error(`Unsupported provider type: ${randomProvider.type}`);
-    }
-
-    const processedMessages = JSON.parse(applyVariablesToMessages(JSON.stringify(messages), variables)) as ModelMessage[]
+    const { maxOutputTokens, outputFormat, temperature, maxStepCount } = data
+    const { aiProvider, randomProvider, processedMessages } = await prepareProviderAndMessages(data, variables);
 
     const result = streamText({
         model: aiProvider(randomProvider.model),
@@ -156,31 +133,35 @@ const streamResult = async (data: VersionData, variables: Record<string, string>
     return result;
 }
 
-// API Routes
-fastify.post('/api/v1/test', async (request, reply) => {
-    const { data, variables } = request.body as { data: unknown, variables: Record<string, string> }
-
-    const result = await streamResult(data as VersionData, variables);
-
+// Helper to create SSE stream from AI result
+const createSSEStream = (result: Awaited<ReturnType<typeof streamResult>>) => {
     const encoder = new TextEncoder();
 
-    const stream = new ReadableStream({
+    return new ReadableStream({
         async start(controller) {
             try {
-
                 for await (const part of result.fullStream) {
-                    console.log("part", part);
                     controller.enqueue(
                         encoder.encode(`data: ${JSON.stringify(part)}\r\n\r\n`),
                     );
                 }
             } catch (err) {
                 console.error("Streaming error", err);
+                controller.error(err);
             } finally {
                 controller.close();
             }
         },
     });
+}
+
+
+// API Routes
+fastify.post('/api/v1/test', async (request, reply) => {
+    const { data, variables } = request.body as { data: unknown, variables: Record<string, string> }
+
+    const result = await streamResult(data as VersionData, variables);
+    const stream = createSSEStream(result);
 
     reply.headers({
         'Content-Type': 'text/event-stream',
@@ -238,25 +219,7 @@ fastify.post('/api/v1/run', async (request, reply) => {
         // Handle streaming response
         if (stream) {
             const result = await streamResult(version.data as VersionData, variables);
-
-            const encoder = new TextEncoder();
-
-            const streamResponse = new ReadableStream({
-                async start(controller) {
-                    try {
-                        for await (const part of result.fullStream) {
-                            controller.enqueue(
-                                encoder.encode(`data: ${JSON.stringify(part)}\r\n\r\n`),
-                            );
-                        }
-                    } catch (err) {
-                        console.error("Streaming error", err);
-                        controller.error(err);
-                    } finally {
-                        controller.close();
-                    }
-                },
-            });
+            const streamResponse = createSSEStream(result);
 
             reply.headers({
                 'Content-Type': 'text/event-stream',
