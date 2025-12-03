@@ -3,6 +3,7 @@ import {
 	Card,
 	CardBody,
 	CardHeader,
+	cn,
 	Dropdown,
 	DropdownItem,
 	DropdownMenu,
@@ -486,7 +487,12 @@ function ToolMessagePart({
 }) {
 	if (value.type === "tool-result") {
 		return (
-			<div className="w-full space-y-2 bg-default-50 rounded-large">
+			<div
+				className={cn(
+					"w-full space-y-2 bg-default-50 rounded-large",
+					value.output.type.startsWith("error") ? "bg-red-50" : "",
+				)}
+			>
 				<JsonEditor
 					viewOnly={isReadOnly}
 					theme={[

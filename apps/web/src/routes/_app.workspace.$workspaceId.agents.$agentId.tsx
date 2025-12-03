@@ -1,4 +1,7 @@
 import {
+	Accordion,
+	AccordionItem,
+	Alert,
 	addToast,
 	Button,
 	ButtonGroup,
@@ -31,6 +34,8 @@ import {
 	LucideLoader2,
 	LucidePlay,
 	LucideSettings2,
+	LucideShieldAlert,
+	LucideShieldX,
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useState } from "react";
@@ -76,6 +81,9 @@ function RouteComponent() {
 	const queryClient = useQueryClient();
 	const isNewAgent = agentId === "new";
 	const [generatedMessages, setGeneratedMessages] = useState<MessageT[]>([]);
+	const [errors, setErrors] = useState<unknown[]>([]);
+	const [warnings, setWarnings] = useState<unknown[]>([]);
+
 	const [isRunning, setIsRunning] = useState(false);
 	const [version, setVersion] = useState<Tables<"versions">>();
 	const [name, setName] = useState("New Agent");
@@ -357,6 +365,8 @@ function RouteComponent() {
 
 		form.setFieldValue("messages", newMessages);
 		setGeneratedMessages([]);
+		setErrors([]);
+		setWarnings([]);
 	}, [form.getFieldValue, form.setFieldValue, generatedMessages]);
 
 	const handleRun = useCallback(async () => {
@@ -364,6 +374,8 @@ function RouteComponent() {
 			setIsRunning(true);
 
 			setGeneratedMessages([]);
+			setErrors([]);
+			setWarnings([]);
 
 			const url = import.meta.env.DEV
 				? "http://localhost:2223/api/v1/test"
@@ -381,9 +393,8 @@ function RouteComponent() {
 			});
 
 			if (!response.ok) {
-				throw new Error(
-					(await response.json()).message || "Failed to run agent.",
-				);
+				const json = await response.json();
+				setErrors((prev) => [...prev, json]);
 			}
 
 			const chunks = events(response);
@@ -397,11 +408,17 @@ function RouteComponent() {
 					[key: string]: Tool<unknown, unknown>;
 				}>;
 
+				if (parsed.type === "error") {
+					setErrors((prev) => [...prev, parsed.error]);
+				}
+
 				if (parsed.type === "start-step") {
 					generatedMessageState.push({
 						role: "assistant",
 						content: [],
 					});
+
+					setWarnings((prev) => [...prev, ...parsed.warnings]);
 				}
 
 				type AssistantMessage = z.infer<typeof assistantMessageSchema>;
@@ -801,11 +818,55 @@ function RouteComponent() {
 				</div>
 
 				<div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto">
+					{warnings.length > 0 && (
+						<Accordion variant="splitted">
+							{warnings.map((warning, index) => (
+								<AccordionItem
+									key={`${index + 1}`}
+									classNames={{
+										base: "bg-warning-50 bg",
+										title: "text-warning-600 font-medium",
+									}}
+									title="Warning"
+									startContent={
+										<LucideShieldAlert className="size-4 text-warning-600" />
+									}
+								>
+									<p className="whitespace-pre-wrap font-mono text-xs">
+										{JSON.stringify(warning, null, 2)}
+									</p>
+								</AccordionItem>
+							))}
+						</Accordion>
+					)}
+					{errors.length > 0 && (
+						<Accordion variant="splitted">
+							{errors.map((error, index) => (
+								<AccordionItem
+									key={`${index + 1}`}
+									classNames={{
+										base: "bg-danger-50",
+										title: "text-danger-600 font-medium",
+									}}
+									title="Error"
+									startContent={
+										<LucideShieldX className="size-4 text-danger-600" />
+									}
+								>
+									<p className="whitespace-pre-wrap font-mono text-xs">
+										{JSON.stringify(error, null, 2)}
+									</p>
+								</AccordionItem>
+							))}
+						</Accordion>
+					)}
+
 					{!isRunning && generatedMessages.length === 0 && (
 						<p className="text-sm text-default-500 my-auto text-center">
 							Run your agent to see the generated response here.
 						</p>
 					)}
+
 					<Messages
 						isReadOnly
 						value={generatedMessages}
