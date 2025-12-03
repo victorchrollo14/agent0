@@ -17,7 +17,7 @@ async function test() {
 	console.log("Testing generate...");
 	try {
 		const result = await client.generate({
-			agent_id: agentId,
+			agentId,
 			variables: { test: "hello" },
 		});
 		console.log("Generate result:", JSON.stringify(result, null, 2));
@@ -28,7 +28,7 @@ async function test() {
 	console.log("\nTesting stream...");
 	try {
 		const stream = await client.stream({
-			agent_id: agentId,
+			agentId,
 			variables: { test: "hello stream" },
 		});
 

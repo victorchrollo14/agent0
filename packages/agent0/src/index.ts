@@ -34,7 +34,8 @@ export class Agent0 {
 
     async generate(options: RunOptions): Promise<GenerateResponse> {
         const response = await this.fetchApi('/api/v1/run', {
-            ...options,
+            agent_id: options.agentId,
+            variables: options.variables,
             stream: false,
         });
 
@@ -43,7 +44,8 @@ export class Agent0 {
 
     async *stream(options: RunOptions): AsyncGenerator<TextStreamPart<ToolSet>, void, unknown> {
         const response = await this.fetchApi('/api/v1/run', {
-            ...options,
+            agent_id: options.agentId,
+            variables: options.variables,
             stream: true,
         });
 
@@ -53,6 +55,7 @@ export class Agent0 {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
+
         let buffer = '';
 
         try {

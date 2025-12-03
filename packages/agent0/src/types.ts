@@ -6,7 +6,7 @@ export interface Agent0Config {
 }
 
 export interface RunOptions {
-    agent_id: string;
+    agentId: string;
     variables?: Record<string, string>;
 }
 

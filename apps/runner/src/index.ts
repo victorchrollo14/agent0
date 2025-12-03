@@ -6,7 +6,7 @@ import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
 import type { Database } from '@repo/database';
 import { createClient } from '@supabase/supabase-js';
-import { type ModelMessage, Output, stepCountIs, streamText, tool } from 'ai';
+import { generateText, type ModelMessage, Output, stepCountIs, streamText, tool } from 'ai';
 import Fastify from 'fastify';
 import { z } from 'zod';
 import { getAIProvider } from './lib/providers.js';
@@ -94,6 +94,73 @@ const generateResult = async (data: VersionData, variables: Record<string, strin
 
     const processedMessages = JSON.parse(applyVariablesToMessages(JSON.stringify(messages), variables)) as ModelMessage[]
 
+    const result = generateText({
+        model: aiProvider(randomProvider.model),
+        maxOutputTokens,
+        temperature,
+        stopWhen: stepCountIs(maxStepCount || 10),
+        messages: processedMessages,
+        output: outputFormat === "json" ? Output.json() : Output.text(),
+        tools: {
+            weather: tool({
+                description: 'Get the weather in a location',
+                inputSchema: z.object({
+                    location: z.string().describe('The location to get the weather for'),
+                }),
+                execute: async ({ location }) => {
+                    throw new Error("Weather station is offline.");
+
+                    return {
+                        location,
+                        temperature: 72 + Math.floor(Math.random() * 21) - 10,
+                    }
+                },
+            }),
+        },
+    });
+
+    return result;
+}
+
+const streamResult = async (data: VersionData, variables: Record<string, string>) => {
+    const { providers, messages, maxOutputTokens, outputFormat, temperature, maxStepCount } = data
+
+    const { data: availableProviders, error: availableProvidersError } = await supabase
+        .from("providers")
+        .select("*")
+        .in("id", providers.map(p => p.id))
+
+    if (availableProvidersError) {
+        throw availableProvidersError;
+    }
+
+    if (availableProviders.length === 0) {
+        throw new Error("No valid providers found")
+    }
+
+    const providersHydrated = providers.map(p => {
+        const availableProvider = availableProviders.find(ap => ap.id === p.id);
+
+        if (!availableProvider) {
+            throw new Error(`Provider ${p.id} not found`);
+        }
+
+        return {
+            ...p,
+            ...availableProvider,
+        }
+    });
+
+    const randomProvider = providersHydrated[Math.floor(Math.random() * providersHydrated.length)];
+
+    const aiProvider = getAIProvider(randomProvider.type, randomProvider.data);
+
+    if (!aiProvider) {
+        throw new Error(`Unsupported provider type: ${randomProvider.type}`);
+    }
+
+    const processedMessages = JSON.parse(applyVariablesToMessages(JSON.stringify(messages), variables)) as ModelMessage[]
+
     const result = streamText({
         model: aiProvider(randomProvider.model),
         maxOutputTokens,
@@ -101,17 +168,32 @@ const generateResult = async (data: VersionData, variables: Record<string, strin
         stopWhen: stepCountIs(maxStepCount || 10),
         messages: processedMessages,
         output: outputFormat === "json" ? Output.json() : Output.text(),
+        tools: {
+            weather: tool({
+                description: 'Get the weather in a location',
+                inputSchema: z.object({
+                    location: z.string().describe('The location to get the weather for'),
+                }),
+                execute: async ({ location }) => {
+                    throw new Error("Weather station is offline.");
+
+                    return {
+                        location,
+                        temperature: 72 + Math.floor(Math.random() * 21) - 10,
+                    }
+                },
+            }),
+        },
     });
 
     return result;
 }
 
-
 // API Routes
 fastify.post('/api/v1/test', async (request, reply) => {
     const { data, variables } = request.body as { data: unknown, variables: Record<string, string> }
 
-    const result = await generateResult(data as VersionData, variables);
+    const result = await streamResult(data as VersionData, variables);
 
     const encoder = new TextEncoder();
 
@@ -185,47 +267,49 @@ fastify.post('/api/v1/run', async (request, reply) => {
 
     const version = agent.versions[0];
 
-    // Create AI stream
-    const result = await generateResult(version.data as VersionData, variables);
-
-    // Handle streaming response
-    if (stream) {
-        const encoder = new TextEncoder();
-
-        const streamResponse = new ReadableStream({
-            async start(controller) {
-                try {
-                    for await (const part of result.fullStream) {
-                        controller.enqueue(
-                            encoder.encode(`data: ${JSON.stringify(part)}\r\n\r\n`),
-                        );
-                    }
-                } catch (err) {
-                    console.error("Streaming error", err);
-                    controller.error(err);
-                } finally {
-                    controller.close();
-                }
-            },
-        });
-
-        reply.headers({
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-        });
-
-        return reply.send(streamResponse);
-    }
-
-    // Handle non-streaming response
     try {
-        const { messages } = await result.response;
+        // Handle streaming response
+        if (stream) {
+            const result = await streamResult(version.data as VersionData, variables);
 
-        return reply.send({ messages });
-    } catch (err) {
-        console.error("Error processing agent run", err);
-        return reply.code(500).send({ message: 'Error processing agent run' });
+            const encoder = new TextEncoder();
+
+            const streamResponse = new ReadableStream({
+                async start(controller) {
+                    try {
+                        for await (const part of result.fullStream) {
+                            controller.enqueue(
+                                encoder.encode(`data: ${JSON.stringify(part)}\r\n\r\n`),
+                            );
+                        }
+                    } catch (err) {
+                        console.error("Streaming error", err);
+                        controller.error(err);
+                    } finally {
+                        controller.close();
+                    }
+                },
+            });
+
+            reply.headers({
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+            });
+
+            return reply.send(streamResponse);
+        }
+
+        // Handle non-streaming response
+
+        const result = await generateResult(version.data as VersionData, variables);
+
+        const { messages } = await result.response;
+        const text = await result.text;
+
+        return reply.send({ text, messages });
+    } catch (error) {
+        return reply.code(500).send(error);
     }
 });
 
