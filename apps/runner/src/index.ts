@@ -6,9 +6,8 @@ import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
 import type { Database } from '@repo/database';
 import { createClient } from '@supabase/supabase-js';
-import { generateText, type ModelMessage, Output, stepCountIs, streamText, tool } from 'ai';
+import { generateText, type ModelMessage, Output, stepCountIs, streamText } from 'ai';
 import Fastify from 'fastify';
-import { z } from 'zod';
 import { getAIProvider } from './lib/providers.js';
 import { applyVariablesToMessages } from './lib/variables.js';
 
@@ -101,22 +100,6 @@ const generateResult = async (data: VersionData, variables: Record<string, strin
         stopWhen: stepCountIs(maxStepCount || 10),
         messages: processedMessages,
         output: outputFormat === "json" ? Output.json() : Output.text(),
-        tools: {
-            weather: tool({
-                description: 'Get the weather in a location',
-                inputSchema: z.object({
-                    location: z.string().describe('The location to get the weather for'),
-                }),
-                execute: async ({ location }) => {
-                    throw new Error("Weather station is offline.");
-
-                    return {
-                        location,
-                        temperature: 72 + Math.floor(Math.random() * 21) - 10,
-                    }
-                },
-            }),
-        },
     });
 
     return result;
@@ -168,22 +151,6 @@ const streamResult = async (data: VersionData, variables: Record<string, string>
         stopWhen: stepCountIs(maxStepCount || 10),
         messages: processedMessages,
         output: outputFormat === "json" ? Output.json() : Output.text(),
-        tools: {
-            weather: tool({
-                description: 'Get the weather in a location',
-                inputSchema: z.object({
-                    location: z.string().describe('The location to get the weather for'),
-                }),
-                execute: async ({ location }) => {
-                    throw new Error("Weather station is offline.");
-
-                    return {
-                        location,
-                        temperature: 72 + Math.floor(Math.random() * 21) - 10,
-                    }
-                },
-            }),
-        },
     });
 
     return result;
