@@ -490,7 +490,11 @@ function ToolMessagePart({
 			<div
 				className={cn(
 					"w-full space-y-2 bg-default-50 rounded-large",
-					value.output.type.startsWith("error") ? "bg-red-50" : "",
+					(value.output as { type: string; value: unknown })?.type.startsWith(
+						"error",
+					)
+						? "bg-red-50"
+						: "",
 				)}
 			>
 				<JsonEditor

@@ -101,22 +101,6 @@ const generateResult = async (data: VersionData, variables: Record<string, strin
         stopWhen: stepCountIs(maxStepCount || 10),
         messages: processedMessages,
         output: outputFormat === "json" ? Output.json() : Output.text(),
-        tools: {
-            weather: tool({
-                description: 'Get the weather in a location',
-                inputSchema: z.object({
-                    location: z.string().describe('The location to get the weather for'),
-                }),
-                execute: async ({ location }) => {
-                    throw new Error("Weather station is offline.");
-
-                    return {
-                        location,
-                        temperature: 72 + Math.floor(Math.random() * 21) - 10,
-                    }
-                },
-            }),
-        },
     });
 
     return result;
