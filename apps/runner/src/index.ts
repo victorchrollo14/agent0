@@ -6,7 +6,7 @@ import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
 import type { Database } from '@repo/database';
 import { createClient } from '@supabase/supabase-js';
-import { type ModelMessage, stepCountIs, streamText, tool } from 'ai';
+import { type ModelMessage, Output, stepCountIs, streamText, tool } from 'ai';
 import Fastify from 'fastify';
 import { z } from 'zod';
 import { getAIProvider } from './lib/providers.js';
@@ -99,6 +99,7 @@ const generateResult = async (data: VersionData, variables: Record<string, strin
         temperature,
         stopWhen: stepCountIs(maxStepCount || 10),
         messages: processedMessages,
+        output: Output.json(),
         tools: {
             weather: tool({
                 description: 'Get the weather in a location',
