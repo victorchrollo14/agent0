@@ -40,13 +40,9 @@ import { nanoid } from "nanoid";
 import { useCallback, useEffect, useState } from "react";
 import useDb from "use-db";
 import { z } from "zod";
+import type { assistantMessageSchema } from "@/components/assistant-message";
 import { HistoryDrawer } from "@/components/history-drawer";
-import {
-	type assistantMessageSchema,
-	Messages,
-	type MessageT,
-	messageSchema,
-} from "@/components/messages";
+import { Messages, type MessageT, messageSchema } from "@/components/messages";
 import { ModelSelector } from "@/components/model-selector";
 import { VariablesDrawer } from "@/components/variables-drawer";
 import { copyToClipboard } from "@/lib/clipboard";
