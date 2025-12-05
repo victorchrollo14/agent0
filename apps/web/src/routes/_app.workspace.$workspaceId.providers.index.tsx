@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { LucideEllipsisVertical, Plus } from "lucide-react";
+import IDCopy from "@/components/id-copy";
 import { PROVIDER_TYPES } from "@/lib/providers";
 import { providersQuery } from "@/lib/queries";
 
@@ -66,6 +67,7 @@ function RouteComponent() {
 				<TableHeader>
 					<TableColumn>Name</TableColumn>
 					<TableColumn>Type</TableColumn>
+					<TableColumn>ID</TableColumn>
 					<TableColumn>Last Updated</TableColumn>
 					<TableColumn className="w-20" hideHeader>
 						Actions
@@ -83,6 +85,9 @@ function RouteComponent() {
 							<TableRow key={item.id} className="hover:bg-default-100">
 								<TableCell>{item.name}</TableCell>
 								<TableCell>{provider?.label}</TableCell>
+								<TableCell>
+									<IDCopy id={item.id} />
+								</TableCell>
 								<TableCell>
 									{format(item.updated_at, "d LLL, hh:mm a")}
 								</TableCell>

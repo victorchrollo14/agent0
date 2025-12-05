@@ -1,7 +1,6 @@
 import {
 	Button,
 	Chip,
-	Code,
 	Dropdown,
 	DropdownItem,
 	DropdownMenu,
@@ -21,6 +20,7 @@ import {
 	CheckCircle2,
 	LucideEllipsisVertical,
 } from "lucide-react";
+import IDCopy from "@/components/id-copy";
 import { runsQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceId/runs")({
@@ -108,7 +108,7 @@ function RouteComponent() {
 									{item.versions?.agents?.name || "Unknown"}
 								</TableCell>
 								<TableCell>
-									<Code size="sm">{item.id}</Code>
+									<IDCopy id={item.id} />
 								</TableCell>
 
 								<TableCell className="flex justify-end">

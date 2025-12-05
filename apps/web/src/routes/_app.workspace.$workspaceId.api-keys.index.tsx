@@ -16,9 +16,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { LucideCopy, LucideEllipsisVertical, Plus } from "lucide-react";
+import { LucideEllipsisVertical, Plus } from "lucide-react";
 import { useMemo } from "react";
-import { copyToClipboard } from "@/lib/clipboard";
+import IDCopy from "@/components/id-copy";
+
 import { apiKeysQuery, workspacesQuery } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 
@@ -101,8 +102,8 @@ function RouteComponent() {
 				<TableHeader>
 					<TableColumn>Name</TableColumn>
 					<TableColumn>API Key</TableColumn>
-					<TableColumn>Created At</TableColumn>
 					<TableColumn>Created By</TableColumn>
+					<TableColumn>Created At</TableColumn>
 					<TableColumn className="w-20" hideHeader>
 						Actions
 					</TableColumn>
@@ -121,22 +122,7 @@ function RouteComponent() {
 							<TableRow key={item.id}>
 								<TableCell>{item.name}</TableCell>
 								<TableCell>
-									<div className="flex items-center gap-2">
-										<code className="text-xs font-mono">
-											{redactKey(item.id)}
-										</code>
-										<Button
-											isIconOnly
-											size="sm"
-											variant="light"
-											onPress={() => copyToClipboard(item.id)}
-										>
-											<LucideCopy className="size-3.5" />
-										</Button>
-									</div>
-								</TableCell>
-								<TableCell>
-									{format(item.created_at, "d LLL, hh:mm a")}
+									<IDCopy id={item.id} redacted={redactKey(item.id)} />
 								</TableCell>
 								<TableCell>
 									<User
@@ -148,6 +134,10 @@ function RouteComponent() {
 										}}
 									/>
 								</TableCell>
+								<TableCell>
+									{format(item.created_at, "d LLL, hh:mm a")}
+								</TableCell>
+
 								<TableCell className="flex justify-end">
 									<Dropdown>
 										<DropdownTrigger>

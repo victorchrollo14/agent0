@@ -14,8 +14,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { LucideCopy, LucideEllipsisVertical, Plus } from "lucide-react";
-import { copyToClipboard } from "@/lib/clipboard";
+import { LucideEllipsisVertical, Plus } from "lucide-react";
+import IDCopy from "@/components/id-copy";
 import { agentsQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceId/agents/")({
@@ -77,17 +77,7 @@ function RouteComponent() {
 						<TableRow key={item.id} className="hover:bg-default-100">
 							<TableCell>{item.name}</TableCell>
 							<TableCell>
-								<div className="flex gap-1 items-center">
-									<span className="text-xs font-mono">{item.id}</span>
-									<Button
-										variant="light"
-										size="sm"
-										isIconOnly
-										onPress={() => copyToClipboard(item.id)}
-									>
-										<LucideCopy className="size-3.5" />
-									</Button>
-								</div>
+								<IDCopy id={item.id} />
 							</TableCell>
 							<TableCell>{format(item.created_at, "d LLL, hh:mm a")}</TableCell>
 							<TableCell className="flex justify-end">
