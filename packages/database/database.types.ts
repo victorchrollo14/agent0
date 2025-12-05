@@ -128,6 +128,7 @@ export type Database = {
           created_at: string
           data: Json
           id: string
+          is_error: boolean
           version_id: string | null
           workspace_id: string
         }
@@ -135,6 +136,7 @@ export type Database = {
           created_at?: string
           data?: Json
           id: string
+          is_error?: boolean
           version_id?: string | null
           workspace_id: string
         }
@@ -142,6 +144,7 @@ export type Database = {
           created_at?: string
           data?: Json
           id?: string
+          is_error?: boolean
           version_id?: string | null
           workspace_id?: string
         }

@@ -73,24 +73,20 @@ function RouteComponent() {
 					emptyContent="No runs found."
 				>
 					{(item) => {
-						const runData = item.data as {
-							error?: { name: string; message: string };
-						};
-
 						return (
 							<TableRow key={item.id} className="hover:bg-default-100">
 								<TableCell>
 									{format(item.created_at, "d LLL, hh:mm a")}
 								</TableCell>
 								<TableCell>
-									{runData.error ? (
+									{item.is_error ? (
 										<Chip
 											startContent={<AlertCircle className="size-3" />}
 											color="danger"
 											variant="flat"
 											size="sm"
 										>
-											{runData.error.name}
+											Error
 										</Chip>
 									) : (
 										<Chip
