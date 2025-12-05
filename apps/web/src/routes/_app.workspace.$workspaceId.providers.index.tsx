@@ -32,14 +32,10 @@ function RouteComponent() {
 	const { data: providers, isLoading } = useQuery(providersQuery(workspaceId));
 
 	return (
-		<div className="p-6 space-y-6">
-			<div className="flex justify-between items-center">
-				<div>
-					<h1 className="text-2xl font-medium tracking-tight">Providers</h1>
-					<p className="text-default-500">
-						Manage your AI provider configurations
-					</p>
-				</div>
+		<div className="h-screen overflow-hidden flex flex-col">
+			<div className="flex justify-between items-center h-16 border-b border-default-200 box-content px-4">
+				<h1 className="text-xl font-medium tracking-tight">Providers</h1>
+
 				<Button
 					color="primary"
 					startContent={<Plus size={18} />}
@@ -64,7 +60,8 @@ function RouteComponent() {
 					});
 				}}
 				shadow="none"
-				classNames={{ wrapper: "p-0" }}
+				classNames={{ base: "overflow-scroll flex-1" }}
+				isHeaderSticky
 			>
 				<TableHeader>
 					<TableColumn>Name</TableColumn>

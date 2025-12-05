@@ -519,7 +519,7 @@ function RouteComponent() {
 		>
 			<div className="mt-px w-full flex items-center justify-between p-4 h-16 border-b border-default-200 shrink-0">
 				<input
-					className="w-full max-w-96 font-medium outline-none transition"
+					className="w-full max-w-96 text-xl tracking-tight font-medium outline-none transition"
 					value={name}
 					onChange={(e) => setName(e.target.value)}
 					onBlur={() => updateNameMutation.mutate(name)}

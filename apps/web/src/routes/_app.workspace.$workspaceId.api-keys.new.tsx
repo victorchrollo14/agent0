@@ -171,14 +171,7 @@ function RouteComponent() {
 			</div>
 
 			<div className="p-6 max-w-4xl mx-auto space-y-6">
-				<div>
-					<h1 className="text-2xl font-medium tracking-tight">
-						Create API Key
-					</h1>
-					<p className="text-default-500">
-						Generate a new API key for programmatic access to your workspace
-					</p>
-				</div>
+				<h1 className="text-xl font-medium tracking-tight">Create API Key</h1>
 
 				<form
 					onSubmit={(e) => {

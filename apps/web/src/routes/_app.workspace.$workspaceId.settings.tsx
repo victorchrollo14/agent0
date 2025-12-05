@@ -136,142 +136,145 @@ function SettingsPage() {
 	});
 
 	return (
-		<div className="p-6 max-w-4xl mx-auto space-y-6">
-			<div>
-				<h1 className="text-2xl font-medium tracking-tight">
+		<div className="h-screen overflow-hidden flex flex-col">
+			<div className="flex justify-between items-center h-16 border-b border-default-200 box-content px-4">
+				<h1 className="text-xl font-medium tracking-tight">
 					Workspace Settings
 				</h1>
-				<p className="text-default-500">
-					Manage your workspace settings and members.
-				</p>
 			</div>
-			<div className="flex gap-2 items-end">
-				<Input
-					fullWidth
-					variant="bordered"
-					labelPlacement="outside"
-					label="Name"
-					value={name}
-					onValueChange={setName}
-					isInvalid={name.length === 0}
-				/>
+			<div className="flex-1 overflow-scroll">
+				<div className="max-w-4xl mx-auto space-y-6 p-6">
+					<div className="flex gap-2 items-end">
+						<Input
+							fullWidth
+							variant="bordered"
+							labelPlacement="outside"
+							label="Name"
+							value={name}
+							onValueChange={setName}
+							isInvalid={name.length === 0}
+						/>
 
-				{workspace && name !== workspace.name && (
-					<Button
-						color="primary"
-						isLoading={updateWorkspaceNameMutation.isPending}
-						onPress={() => updateWorkspaceNameMutation.mutate(name)}
-					>
-						Update
-					</Button>
-				)}
-			</div>
+						{workspace && name !== workspace.name && (
+							<Button
+								color="primary"
+								isLoading={updateWorkspaceNameMutation.isPending}
+								onPress={() => updateWorkspaceNameMutation.mutate(name)}
+							>
+								Update
+							</Button>
+						)}
+					</div>
 
-			<div className="space-y-2">
-				<div className="flex justify-between items-end">
-					<h3 className="text-sm font-medium">Team Members</h3>
-					<Button
-						size="sm"
-						startContent={<UserPlus className="size-3.5" />}
-						variant="flat"
-						onPress={() => {
-							addToast({
-								description: "Member invitation is not implemented yet.",
-								color: "warning",
-							});
+					<div className="space-y-2">
+						<div className="flex justify-between items-end">
+							<h3 className="text-sm font-medium">Team Members</h3>
+							<Button
+								size="sm"
+								startContent={<UserPlus className="size-3.5" />}
+								variant="flat"
+								onPress={() => {
+									addToast({
+										description: "Member invitation is not implemented yet.",
+										color: "warning",
+									});
+								}}
+							>
+								Add
+							</Button>
+						</div>
+
+						<Table
+							aria-label="Team members table"
+							classNames={{ wrapper: "p-0" }}
+							shadow="none"
+						>
+							<TableHeader>
+								<TableColumn>User</TableColumn>
+								<TableColumn>Role</TableColumn>
+								<TableColumn>Added At</TableColumn>
+								<TableColumn>Actions</TableColumn>
+							</TableHeader>
+							<TableBody>
+								{(workspace?.workspace_user || []).map((wu) => (
+									<TableRow key={wu.user_id}>
+										<TableCell>
+											<User
+												name={wu.users?.name || "Unknown"}
+												avatarProps={{
+													size: "sm",
+													src: `https://api.dicebear.com/9.x/initials/svg?seed=${wu.users?.name}`,
+													fallback: wu.users?.name?.slice(0, 1),
+												}}
+											/>
+										</TableCell>
+										<TableCell className="capitalize">{wu.role}</TableCell>
+										<TableCell>
+											{format(wu.created_at, "d LLL, hh:mm a")}
+										</TableCell>
+										<TableCell>
+											<Button
+												isIconOnly
+												color="danger"
+												variant="light"
+												onPress={() => {
+													setMemberToRemove(wu);
+													onRemoveMemberOpen();
+												}}
+											>
+												<Trash2 size={18} />
+											</Button>
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</div>
+
+					<Divider />
+
+					{/* Danger Zone */}
+					<div className="flex items-end justify-between">
+						<div>
+							<p className="text-sm font-medium">Delete Workspace</p>
+							<p className="text-sm text-default-500">
+								Permanently delete this workspace and all of its data. This
+								action cannot be undone.
+							</p>
+						</div>
+						<Button color="danger" onPress={onDeleteWorkspaceOpen}>
+							Delete
+						</Button>
+					</div>
+
+					{/* Modals */}
+					<ConfirmationModal
+						isOpen={isDeleteWorkspaceOpen}
+						onOpenChange={onDeleteWorkspaceOpenChange}
+						title="Delete Workspace"
+						description="Are you sure you want to delete this workspace? This action cannot be undone and will permanently delete all data associated with this workspace."
+						onConfirm={() => deleteWorkspaceMutation.mutate()}
+						isLoading={deleteWorkspaceMutation.isPending}
+						confirmText="Delete Workspace"
+						confirmColor="danger"
+					/>
+
+					<ConfirmationModal
+						isOpen={isRemoveMemberOpen}
+						onOpenChange={onRemoveMemberOpenChange}
+						title="Remove Member"
+						description={`Are you sure you want to remove ${memberToRemove?.users?.name || "this member"} from the workspace?`}
+						onConfirm={() => {
+							if (memberToRemove) {
+								removeMemberMutation.mutate(memberToRemove.user_id);
+							}
 						}}
-					>
-						Add
-					</Button>
+						isLoading={removeMemberMutation.isPending}
+						confirmText="Remove Member"
+						confirmColor="danger"
+					/>
 				</div>
-
-				<Table
-					aria-label="Team members table"
-					classNames={{ wrapper: "p-0" }}
-					shadow="none"
-				>
-					<TableHeader>
-						<TableColumn>User</TableColumn>
-						<TableColumn>Role</TableColumn>
-						<TableColumn>Added At</TableColumn>
-						<TableColumn>Actions</TableColumn>
-					</TableHeader>
-					<TableBody>
-						{(workspace?.workspace_user || []).map((wu) => (
-							<TableRow key={wu.user_id}>
-								<TableCell>
-									<User
-										name={wu.users?.name || "Unknown"}
-										avatarProps={{
-											size: "sm",
-											src: `https://api.dicebear.com/9.x/initials/svg?seed=${wu.users?.name}`,
-											fallback: wu.users?.name?.slice(0, 1),
-										}}
-									/>
-								</TableCell>
-								<TableCell className="capitalize">{wu.role}</TableCell>
-								<TableCell>{format(wu.created_at, "d LLL, hh:mm a")}</TableCell>
-								<TableCell>
-									<Button
-										isIconOnly
-										color="danger"
-										variant="light"
-										onPress={() => {
-											setMemberToRemove(wu);
-											onRemoveMemberOpen();
-										}}
-									>
-										<Trash2 size={18} />
-									</Button>
-								</TableCell>
-							</TableRow>
-						))}
-					</TableBody>
-				</Table>
 			</div>
-
-			<Divider />
-
-			{/* Danger Zone */}
-			<div className="flex items-end justify-between">
-				<div>
-					<p className="text-sm font-medium">Delete Workspace</p>
-					<p className="text-sm text-default-500">
-						Permanently delete this workspace and all of its data. This action
-						cannot be undone.
-					</p>
-				</div>
-				<Button color="danger" onPress={onDeleteWorkspaceOpen}>
-					Delete
-				</Button>
-			</div>
-
-			{/* Modals */}
-			<ConfirmationModal
-				isOpen={isDeleteWorkspaceOpen}
-				onOpenChange={onDeleteWorkspaceOpenChange}
-				title="Delete Workspace"
-				description="Are you sure you want to delete this workspace? This action cannot be undone and will permanently delete all data associated with this workspace."
-				onConfirm={() => deleteWorkspaceMutation.mutate()}
-				isLoading={deleteWorkspaceMutation.isPending}
-				confirmText="Delete Workspace"
-				confirmColor="danger"
-			/>
-
-			<ConfirmationModal
-				isOpen={isRemoveMemberOpen}
-				onOpenChange={onRemoveMemberOpenChange}
-				title="Remove Member"
-				description={`Are you sure you want to remove ${memberToRemove?.users?.name || "this member"} from the workspace?`}
-				onConfirm={() => {
-					if (memberToRemove) {
-						removeMemberMutation.mutate(memberToRemove.user_id);
-					}
-				}}
-				isLoading={removeMemberMutation.isPending}
-				confirmText="Remove Member"
-				confirmColor="danger"
-			/>
 		</div>
 	);
 }

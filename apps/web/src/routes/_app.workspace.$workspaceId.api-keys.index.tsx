@@ -73,14 +73,10 @@ function RouteComponent() {
 	};
 
 	return (
-		<div className="p-6">
-			<div className="flex justify-between items-center mb-6">
-				<div>
-					<h1 className="text-2xl font-medium tracking-tight">API Keys</h1>
-					<p className="text-default-500">
-						Manage API keys for programmatic access to your workspace
-					</p>
-				</div>
+		<div className="h-screen overflow-hidden flex flex-col">
+			<div className="flex justify-between items-center h-16 border-b border-default-200 box-content px-4">
+				<h1 className="text-xl font-medium tracking-tight">API Keys</h1>
+
 				<Button
 					color="primary"
 					startContent={<Plus size={18} />}
@@ -95,7 +91,13 @@ function RouteComponent() {
 				</Button>
 			</div>
 
-			<Table shadow="none" classNames={{ wrapper: "p-0" }}>
+			<Table
+				aria-label="API Keys Table"
+				shadow="none"
+				radius="none"
+				classNames={{ base: "overflow-scroll flex-1" }}
+				isHeaderSticky
+			>
 				<TableHeader>
 					<TableColumn>Name</TableColumn>
 					<TableColumn>API Key</TableColumn>
@@ -116,7 +118,7 @@ function RouteComponent() {
 						)?.users;
 
 						return (
-							<TableRow key={item.id} className="hover:bg-default-100">
+							<TableRow key={item.id}>
 								<TableCell>{item.name}</TableCell>
 								<TableCell>
 									<div className="flex items-center gap-2">

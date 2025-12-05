@@ -30,14 +30,10 @@ function RouteComponent() {
 	const { data: agents, isLoading } = useQuery(agentsQuery(workspaceId));
 
 	return (
-		<div className="p-6 space-y-6">
-			<div className="flex justify-between items-center">
-				<div>
-					<h1 className="text-2xl font-medium tracking-tight">Agents</h1>
-					<p className="text-default-500">
-						Manage your AI agents in this workspace
-					</p>
-				</div>
+		<div className="h-screen overflow-hidden flex flex-col">
+			<div className="flex justify-between items-center h-16 border-b border-default-200 box-content px-4">
+				<h1 className="text-xl font-medium tracking-tight">Agents</h1>
+
 				<Button
 					color="primary"
 					startContent={<Plus size={18} />}
@@ -53,16 +49,16 @@ function RouteComponent() {
 			</div>
 
 			<Table
-				aria-label="Agents"
+				aria-label="Agents Table"
 				onRowAction={(key) => {
-					console.log("ROW", key);
 					if (!key) return;
 					navigate({
 						to: key.toString(),
 					});
 				}}
 				shadow="none"
-				classNames={{ wrapper: "p-0" }}
+				classNames={{ base: "overflow-scroll flex-1" }}
+				isHeaderSticky
 			>
 				<TableHeader>
 					<TableColumn>Name</TableColumn>
