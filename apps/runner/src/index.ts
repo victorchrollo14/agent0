@@ -182,13 +182,13 @@ fastify.post('/api/v1/test', async (request, reply) => {
 });
 
 
-async function insertRun(workspace_id: string, version_id: string, data: unknown, startTime: number) {
+async function insertRun(workspace_id: string, version_id: string, data: unknown, start_time: number, is_error: boolean) {
     await supabase.from("runs").insert({
         id: nanoid(),
         workspace_id,
         version_id,
         data: data as unknown as Json,
-        created_at: new Date(startTime).toISOString(),
+        created_at: new Date(start_time).toISOString(),
     });
 }
 
@@ -286,7 +286,7 @@ fastify.post('/api/v1/run', async (request, reply) => {
                 onFinish: async ({ steps }) => {
                     runData.metrics.responseTime = Date.now() - runData.metrics.preProcessingTime - startTime;
                     runData.steps = steps;
-                    await insertRun(agent.workspaces.id, version.id, runData, startTime);
+                    await insertRun(agent.workspaces.id, version.id, runData, startTime, false);
                 },
                 onError: async ({ error }) => {
                     if (runData.metrics.firstTokenTime === 0) {
@@ -299,7 +299,7 @@ fastify.post('/api/v1/run', async (request, reply) => {
                         message: error instanceof Error ? error.message : "Unknown error occured.",
                         cause: error instanceof Error ? (error as Error & { cause?: unknown }).cause : undefined
                     }
-                    await insertRun(agent.workspaces.id, version.id, runData, startTime);
+                    await insertRun(agent.workspaces.id, version.id, runData, startTime, true);
                 }
             });
 
@@ -337,7 +337,7 @@ fastify.post('/api/v1/run', async (request, reply) => {
 
     runData.metrics.firstTokenTime = Date.now() - runData.metrics.preProcessingTime - startTime;
     runData.metrics.responseTime = Date.now() - runData.metrics.preProcessingTime - startTime;
-    insertRun(agent.workspaces.id, version.id, runData, startTime);
+    insertRun(agent.workspaces.id, version.id, runData, startTime, runData.error !== undefined);
 });
 
 
