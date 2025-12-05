@@ -198,6 +198,15 @@ fastify.post('/api/v1/run', async (request, reply) => {
 
     const runData: {
         request?: VersionData & { model: { provider_id: string, name: string }, stream: boolean },
+        overrides?: {
+            model?: {
+                provider_id?: string;
+                name?: string;
+            };
+            maxOutputTokens?: number;
+            temperature?: number;
+            maxStepCount?: number;
+        },
         steps?: StepResult<ToolSet>[],
         error?: {
             name: string;
@@ -217,10 +226,19 @@ fastify.post('/api/v1/run', async (request, reply) => {
         }
     };
 
-    const { agent_id, variables = {}, stream = false } = request.body as {
+    const { agent_id, variables = {}, stream = false, overrides } = request.body as {
         agent_id: string;
         variables?: Record<string, string>;
         stream?: boolean;
+        overrides?: {
+            model?: {
+                provider_id?: string;
+                name?: string;
+            };
+            maxOutputTokens?: number;
+            temperature?: number;
+            maxStepCount?: number;
+        };
     };
 
     // Validate request body
@@ -258,6 +276,16 @@ fastify.post('/api/v1/run', async (request, reply) => {
 
     const version = agent.versions[0];
     const data = version.data as VersionData;
+
+    // Apply runtime overrides if provided
+    if (overrides) {
+        if (overrides.model?.provider_id) data.model.provider_id = overrides.model.provider_id;
+        if (overrides.model?.name) data.model.name = overrides.model.name;
+        if (overrides.maxOutputTokens !== undefined) data.maxOutputTokens = overrides.maxOutputTokens;
+        if (overrides.temperature !== undefined) data.temperature = overrides.temperature;
+        if (overrides.maxStepCount !== undefined) data.maxStepCount = overrides.maxStepCount;
+    }
+
     const { model, processedMessages } = await prepareProviderAndMessages(data, variables);
     const { maxOutputTokens, outputFormat, temperature, maxStepCount } = data
 
@@ -271,6 +299,7 @@ fastify.post('/api/v1/run', async (request, reply) => {
     }
 
     runData.request = { ...payload, model: data.model, stream };
+    runData.overrides = overrides;
     runData.metrics.preProcessingTime = Date.now() - startTime;
 
 

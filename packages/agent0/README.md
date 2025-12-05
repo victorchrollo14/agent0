@@ -86,6 +86,17 @@ Execute an agent and get the complete response.
 interface RunOptions {
   agentId: string;                    // The ID of the agent to run
   variables?: Record<string, string>; // Variables to pass to the agent
+  overrides?: ModelOverrides;         // Runtime model configuration overrides
+}
+
+interface ModelOverrides {
+  model?: {                    // Override the model
+    provider_id?: string;      // Override provider ID
+    name?: string;             // Override model name
+  };
+  maxOutputTokens?: number;    // Override max output tokens
+  temperature?: number;        // Override temperature
+  maxStepCount?: number;       // Override max step count
 }
 ```
 
@@ -224,6 +235,46 @@ const response = await client.generate({
   }
 });
 // Prompt becomes: "Hello Sarah, let's talk about machine learning"
+```
+
+### Model Overrides
+
+The `overrides` option allows you to dynamically configure the model at runtime. This is useful for:
+- **Load Balancing**: Distribute requests across different providers
+- **Fallbacks**: Switch to a backup model if the primary is unavailable  
+- **A/B Testing**: Test different models with the same agent configuration
+- **Cost Optimization**: Use cheaper models for non-critical requests
+
+```typescript
+// Override the model for a specific request
+const response = await client.generate({
+  agentId: 'agent_123',
+  variables: { prompt: 'Hello world' },
+  overrides: {
+    model: { name: 'gpt-4o-mini' }, // Use a different model
+    temperature: 0.5,               // Adjust temperature
+    maxOutputTokens: 500            // Limit output length
+  }
+});
+
+// Implement a simple fallback pattern
+async function runWithFallback(agentId: string, variables: Record<string, string>) {
+  try {
+    return await client.generate({ agentId, variables });
+  } catch (error) {
+    // Fallback to a different provider/model
+    return await client.generate({
+      agentId,
+      variables,
+      overrides: {
+        model: {
+          provider_id: 'backup-provider-id',
+          name: 'claude-3-haiku-20240307'
+        }
+      }
+    });
+  }
+}
 ```
 
 ### Error Handling

@@ -36,6 +36,7 @@ export class Agent0 {
         const response = await this.fetchApi('/api/v1/run', {
             agent_id: options.agentId,
             variables: options.variables,
+            overrides: options.overrides,
             stream: false,
         });
 
@@ -46,6 +47,7 @@ export class Agent0 {
         const response = await this.fetchApi('/api/v1/run', {
             agent_id: options.agentId,
             variables: options.variables,
+            overrides: options.overrides,
             stream: true,
         });
 

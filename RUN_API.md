@@ -25,7 +25,16 @@ x-api-key: <your-api-key>
   "variables": {
     "key": "value"
   },
-  "stream": boolean (optional, default: false)
+  "stream": boolean (optional, default: false),
+  "overrides": {
+    "model": {
+      "provider_id": "string (optional)",
+      "name": "string (optional)"
+    },
+    "maxOutputTokens": number (optional),
+    "temperature": number (optional),
+    "maxStepCount": number (optional)
+  }
 }
 ```
 
@@ -34,6 +43,12 @@ x-api-key: <your-api-key>
 - **agent_id** (required): The ID of the agent to run
 - **variables** (optional): Key-value pairs to replace variables in the agent's messages
 - **stream** (optional): Whether to stream the response (true) or return complete messages at the end (false)
+- **overrides** (optional): Runtime configuration overrides for the model
+  - **model.provider_id**: Override the provider to use
+  - **model.name**: Override the model name
+  - **maxOutputTokens**: Override the maximum output tokens
+  - **temperature**: Override the temperature setting
+  - **maxStepCount**: Override the maximum step count
 
 ## Response
 
@@ -139,6 +154,27 @@ curl -X POST https://your-domain.com/api/v1/run \
       "topic": "AI"
     },
     "stream": false
+  }'
+```
+
+### cURL Example (With Overrides)
+
+```bash
+curl -X POST https://your-domain.com/api/v1/run \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: your-api-key-here" \
+  -d '{
+    "agent_id": "agent-123",
+    "variables": {
+      "user_name": "John"
+    },
+    "overrides": {
+      "model": {
+        "name": "gpt-4o-mini"
+      },
+      "temperature": 0.7,
+      "maxOutputTokens": 500
+    }
   }'
 ```
 
