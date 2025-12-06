@@ -298,7 +298,7 @@ fastify.post('/api/v1/run', async (request, reply) => {
     // Get agent and verify it belongs to the same workspace
     const { data: agent, error: agentError } = await supabase
         .from('agents')
-        .select('workspaces(id, api_keys(id)), versions(*)')
+        .select('workspaces(id, api_keys(id, key)), versions(*)')
         .eq('id', agent_id)
         .eq("versions.is_deployed", true)
         .single();
@@ -308,7 +308,7 @@ fastify.post('/api/v1/run', async (request, reply) => {
     }
 
     // Verify workspace access
-    if (!agent.workspaces.api_keys.map(ak => ak.id).includes(apiKey)) {
+    if (!agent.workspaces.api_keys.map(ak => ak.key).includes(apiKey)) {
         return reply.code(403).send({ message: 'Access denied' });
     }
 

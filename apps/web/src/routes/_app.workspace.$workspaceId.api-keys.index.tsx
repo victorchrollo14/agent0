@@ -133,7 +133,7 @@ function RouteComponent() {
 							<TableRow key={item.id}>
 								<TableCell>{item.name}</TableCell>
 								<TableCell>
-									<IDCopy id={item.id} redacted={redactKey(item.id)} />
+									<IDCopy id={item.key} redacted={redactKey(item.key)} />
 								</TableCell>
 								<TableCell>
 									<User
