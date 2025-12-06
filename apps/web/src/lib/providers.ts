@@ -1,6 +1,11 @@
+import { GeminiIcon, GoogleCloudIcon, MicrosoftIcon, OpenaiIcon, XaiIcon } from "@/components/boxicons";
+
 export const PROVIDER_TYPES = [
     {
-        key: "xai", label: "XAI", models: [
+        key: "xai",
+        icon: XaiIcon,
+        label: "XAI",
+        models: [
             "grok-4-1-fast-non-reasoning",
             "grok-4-1-fast-reasoning",
             "grok-4-fast-non-reasoning",
@@ -8,7 +13,10 @@ export const PROVIDER_TYPES = [
         ]
     },
     {
-        key: "openai", label: "OpenAI", models: [
+        key: "openai",
+        icon: OpenaiIcon,
+        label: "OpenAI",
+        models: [
             "gpt-5.1",
             "gpt-5.1-chat-latest",
             "gpt-5-pro",
@@ -22,21 +30,30 @@ export const PROVIDER_TYPES = [
         ]
     },
     {
-        key: "google-vertex", label: "Google Vertex AI", models: [
+        key: "google-vertex",
+        icon: GoogleCloudIcon,
+        label: "Google Vertex AI",
+        models: [
             "gemini-3-pro-preview",
             "gemini-2.5-pro",
             "gemini-2.5-flash",
         ]
     },
     {
-        key: "google", label: "Google Generative AI", models: [
+        key: "google",
+        icon: GeminiIcon,
+        label: "Google Generative AI",
+        models: [
             "gemini-3-pro-preview",
             "gemini-2.5-pro",
             "gemini-2.5-flash",
         ]
     },
     {
-        key: "azure", label: "Azure OpenAI", models: [
+        key: "azure",
+        icon: MicrosoftIcon,
+        label: "Azure OpenAI",
+        models: [
             "gpt-5.1",
             "gpt-5.1-chat-latest",
             "gpt-5-pro",

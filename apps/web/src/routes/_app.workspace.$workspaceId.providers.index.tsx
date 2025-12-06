@@ -84,7 +84,12 @@ function RouteComponent() {
 						return (
 							<TableRow key={item.id} className="hover:bg-default-100">
 								<TableCell>{item.name}</TableCell>
-								<TableCell>{provider?.label}</TableCell>
+								<TableCell>
+									<div className="flex items-center gap-2">
+										{provider?.icon && <provider.icon className="size-5" />}
+										{provider?.label}
+									</div>
+								</TableCell>
 								<TableCell>
 									<IDCopy id={item.id} />
 								</TableCell>

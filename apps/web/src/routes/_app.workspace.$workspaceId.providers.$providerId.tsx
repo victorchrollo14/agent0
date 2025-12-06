@@ -222,7 +222,13 @@ function RouteComponent() {
 								errorMessage={field.state.meta.errors[0]}
 							>
 								{PROVIDER_TYPES.map((provider) => (
-									<SelectItem key={provider.key}>{provider.label}</SelectItem>
+									<SelectItem
+										key={provider.key}
+										variant="flat"
+										startContent={<provider.icon className="size-5" />}
+									>
+										{provider.label}
+									</SelectItem>
 								))}
 							</Select>
 						)}

@@ -69,6 +69,7 @@ export function ModelSelector({
 			<PopoverContent className="p-2 flex flex-row items-start">
 				<Listbox
 					aria-label="Providers"
+					variant="flat"
 					emptyContent="You haven't created any providers."
 					selectionMode="single"
 					className="w-48 max-h-64 overflow-y-auto"
@@ -82,13 +83,27 @@ export function ModelSelector({
 						}
 					}}
 				>
-					{providers.map((provider) => (
-						<ListboxItem key={provider.id}>{provider.name}</ListboxItem>
-					))}
+					{providers.map((provider) => {
+						const providerType = PROVIDER_TYPES.find(
+							(p) => p.key === provider.type,
+						);
+
+						return (
+							<ListboxItem
+								key={provider.id}
+								startContent={
+									providerType?.icon && <providerType.icon className="size-5" />
+								}
+								title={provider.name}
+								// description={providerType?.label}
+							/>
+						);
+					})}
 				</Listbox>
 
 				<Listbox
 					aria-label="Models"
+					variant="flat"
 					emptyContent="Select a provider to see available models"
 					selectionMode="single"
 					className="w-64 max-h-64 overflow-y-auto"
@@ -109,7 +124,7 @@ export function ModelSelector({
 					}}
 				>
 					{availableModels.map((model) => (
-						<ListboxItem key={model}>{model}</ListboxItem>
+						<ListboxItem key={model} title={model} />
 					))}
 				</Listbox>
 			</PopoverContent>
