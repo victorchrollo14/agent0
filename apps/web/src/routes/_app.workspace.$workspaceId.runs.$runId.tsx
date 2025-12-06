@@ -24,6 +24,7 @@ import {
 	Clock,
 	Code,
 	Cpu,
+	FlaskConical,
 	Layers,
 	Zap,
 } from "lucide-react";
@@ -139,6 +140,16 @@ function RouteComponent() {
 								size="sm"
 							>
 								Success
+							</Chip>
+						)}
+						{run.is_test && (
+							<Chip
+								startContent={<FlaskConical className="size-3" />}
+								color="warning"
+								variant="flat"
+								size="sm"
+							>
+								Test
 							</Chip>
 						)}
 					</div>

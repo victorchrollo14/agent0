@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import {
 	AlertCircle,
 	CheckCircle2,
+	FlaskConical,
 	LucideEllipsisVertical,
 } from "lucide-react";
 import IDCopy from "@/components/id-copy";
@@ -79,25 +80,37 @@ function RouteComponent() {
 									{format(item.created_at, "d LLL, hh:mm a")}
 								</TableCell>
 								<TableCell>
-									{item.is_error ? (
-										<Chip
-											startContent={<AlertCircle className="size-3" />}
-											color="danger"
-											variant="flat"
-											size="sm"
-										>
-											Error
-										</Chip>
-									) : (
-										<Chip
-											startContent={<CheckCircle2 className="size-3" />}
-											color="success"
-											variant="flat"
-											size="sm"
-										>
-											Success
-										</Chip>
-									)}
+									<div className="flex items-center gap-2">
+										{item.is_error ? (
+											<Chip
+												startContent={<AlertCircle className="size-3" />}
+												color="danger"
+												variant="flat"
+												size="sm"
+											>
+												Error
+											</Chip>
+										) : (
+											<Chip
+												startContent={<CheckCircle2 className="size-3" />}
+												color="success"
+												variant="flat"
+												size="sm"
+											>
+												Success
+											</Chip>
+										)}
+										{item.is_test && (
+											<Chip
+												startContent={<FlaskConical className="size-3" />}
+												color="warning"
+												variant="flat"
+												size="sm"
+											>
+												Test
+											</Chip>
+										)}
+									</div>
 								</TableCell>
 
 								<TableCell>{item.versions?.agents?.name || "-"}</TableCell>

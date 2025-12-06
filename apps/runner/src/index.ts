@@ -63,6 +63,30 @@ type VersionData = {
     maxStepCount?: number,
 };
 
+type RunData = {
+    request?: VersionData & { model: { provider_id: string, name: string }, stream: boolean },
+    overrides?: {
+        model?: {
+            provider_id?: string;
+            name?: string;
+        };
+        maxOutputTokens?: number;
+        temperature?: number;
+        maxStepCount?: number;
+    },
+    steps?: StepResult<ToolSet>[],
+    error?: {
+        name: string;
+        message: string;
+        cause?: unknown;
+    },
+    metrics: {
+        preProcessingTime: number,
+        firstTokenTime: number,
+        responseTime: number,
+    }
+};
+
 // Helper to prepare provider and messages - shared logic between generate and stream
 const prepareProviderAndMessages = async (data: VersionData, variables: Record<string, string>) => {
     const { model, messages } = data;
@@ -113,9 +137,30 @@ const createSSEStream = (result: Awaited<ReturnType<typeof streamText>>) => {
     });
 }
 
+async function insertRun(workspace_id: string, version_id: string, data: RunData, start_time: number, is_error: boolean, is_test: boolean) {
+    await supabase.from("runs").insert({
+        id: nanoid(),
+        workspace_id,
+        version_id,
+        data: data as unknown as Json,
+        created_at: new Date(start_time).toISOString(),
+        is_error,
+        is_test,
+    });
+}
 
 // API Routes
 fastify.post('/api/v1/test', async (request, reply) => {
+    const startTime = Date.now();
+
+    const runData: RunData = {
+        metrics: {
+            preProcessingTime: 0,
+            firstTokenTime: 0,
+            responseTime: 0,
+        }
+    };
+
     // Extract and validate JWT token from Authorization header
     const token = request.headers.authorization?.split('Bearer ')[1];
 
@@ -134,13 +179,18 @@ fastify.post('/api/v1/test', async (request, reply) => {
         return reply.code(401).send({ message: 'Failed to get claims' });
     }
 
-    const { data, variables } = request.body as { data: unknown, variables: Record<string, string> }
+    const { data, variables, version_id } = request.body as {
+        data: unknown,
+        variables: Record<string, string>,
+        version_id: string
+    };
+
     const versionData = data as VersionData;
 
-    // Get the provider to check workspace access
+    // Get the provider to check workspace access (also fetch workspace_id for logging)
     const { data: provider, error: providerError } = await supabase
         .from("providers")
-        .select("workspaces(workspace_user(user_id, role))")
+        .select("workspace_id, workspaces(workspace_user(user_id, role))")
         .eq("id", versionData.model.provider_id)
         .eq("workspaces.workspace_user.user_id", claims.claims.sub)
         .single();
@@ -156,13 +206,43 @@ fastify.post('/api/v1/test', async (request, reply) => {
     const { maxOutputTokens, outputFormat, temperature, maxStepCount } = versionData
     const { model, processedMessages } = await prepareProviderAndMessages(versionData, variables);
 
-    const result = streamText({
+    const payload = {
         model,
         maxOutputTokens,
         temperature,
         stopWhen: stepCountIs(maxStepCount || 10),
         messages: processedMessages,
         output: outputFormat === "json" ? Output.json() : Output.text(),
+    };
+
+    runData.request = { ...payload, model: versionData.model, stream: true };
+    runData.metrics.preProcessingTime = Date.now() - startTime;
+
+    const result = streamText({
+        ...payload,
+        onChunk: () => {
+            if (runData.metrics.firstTokenTime === 0) {
+                runData.metrics.firstTokenTime = Date.now() - runData.metrics.preProcessingTime - startTime;
+            }
+        },
+        onFinish: async ({ steps }) => {
+            runData.metrics.responseTime = Date.now() - runData.metrics.preProcessingTime - startTime;
+            runData.steps = steps;
+            await insertRun(provider.workspace_id, version_id, runData, startTime, false, true);
+        },
+        onError: async ({ error }) => {
+            if (runData.metrics.firstTokenTime === 0) {
+                runData.metrics.firstTokenTime = Date.now() - runData.metrics.preProcessingTime - startTime;
+            }
+            runData.metrics.responseTime = Date.now() - runData.metrics.preProcessingTime - startTime;
+
+            runData.error = {
+                name: error instanceof Error ? error.name : "UnknownError",
+                message: error instanceof Error ? error.message : "Unknown error occured.",
+                cause: error instanceof Error ? (error as Error & { cause?: unknown }).cause : undefined
+            }
+            await insertRun(provider.workspace_id, version_id, runData, startTime, true, true);
+        }
     });
 
     const stream = createSSEStream(result);
@@ -176,44 +256,10 @@ fastify.post('/api/v1/test', async (request, reply) => {
     return reply.send(stream);
 });
 
-
-async function insertRun(workspace_id: string, version_id: string, data: unknown, start_time: number, is_error: boolean) {
-    await supabase.from("runs").insert({
-        id: nanoid(),
-        workspace_id,
-        version_id,
-        data: data as unknown as Json,
-        created_at: new Date(start_time).toISOString(),
-    });
-}
-
-
 fastify.post('/api/v1/run', async (request, reply) => {
     const startTime = Date.now();
 
-    const runData: {
-        request?: VersionData & { model: { provider_id: string, name: string }, stream: boolean },
-        overrides?: {
-            model?: {
-                provider_id?: string;
-                name?: string;
-            };
-            maxOutputTokens?: number;
-            temperature?: number;
-            maxStepCount?: number;
-        },
-        steps?: StepResult<ToolSet>[],
-        error?: {
-            name: string;
-            message: string;
-            cause?: unknown;
-        },
-        metrics: {
-            preProcessingTime: number,
-            firstTokenTime: number,
-            responseTime: number,
-        }
-    } = {
+    const runData: RunData = {
         metrics: {
             preProcessingTime: 0,
             firstTokenTime: 0,
@@ -314,7 +360,7 @@ fastify.post('/api/v1/run', async (request, reply) => {
                 onFinish: async ({ steps }) => {
                     runData.metrics.responseTime = Date.now() - runData.metrics.preProcessingTime - startTime;
                     runData.steps = steps;
-                    await insertRun(agent.workspaces.id, version.id, runData, startTime, false);
+                    await insertRun(agent.workspaces.id, version.id, runData, startTime, false, false);
                 },
                 onError: async ({ error }) => {
                     if (runData.metrics.firstTokenTime === 0) {
@@ -327,7 +373,7 @@ fastify.post('/api/v1/run', async (request, reply) => {
                         message: error instanceof Error ? error.message : "Unknown error occured.",
                         cause: error instanceof Error ? (error as Error & { cause?: unknown }).cause : undefined
                     }
-                    await insertRun(agent.workspaces.id, version.id, runData, startTime, true);
+                    await insertRun(agent.workspaces.id, version.id, runData, startTime, true, false);
                 }
             });
 
@@ -365,7 +411,7 @@ fastify.post('/api/v1/run', async (request, reply) => {
 
     runData.metrics.firstTokenTime = Date.now() - runData.metrics.preProcessingTime - startTime;
     runData.metrics.responseTime = Date.now() - runData.metrics.preProcessingTime - startTime;
-    insertRun(agent.workspaces.id, version.id, runData, startTime, runData.error !== undefined);
+    insertRun(agent.workspaces.id, version.id, runData, startTime, runData.error !== undefined, false);
 });
 
 

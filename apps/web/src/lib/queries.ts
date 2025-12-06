@@ -98,7 +98,7 @@ export const runsQuery = (workspaceId: string) => queryOptions({
     queryFn: async () => {
         const { data, error } = await supabase
             .from("runs")
-            .select("id, is_error, created_at, versions(id, agents(name))")
+            .select("id, is_error, is_test, created_at, versions(id, agents(name))")
             .eq("workspace_id", workspaceId)
             .order("created_at", { ascending: false });
 

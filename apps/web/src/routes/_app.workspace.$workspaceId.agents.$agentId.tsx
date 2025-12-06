@@ -396,6 +396,7 @@ function RouteComponent() {
 				body: JSON.stringify({
 					data: form.state.values,
 					variables: variableValues,
+					version_id: version?.id,
 				}),
 			});
 
@@ -506,7 +507,7 @@ function RouteComponent() {
 		} finally {
 			setIsRunning(false);
 		}
-	}, [form, variableValues]);
+	}, [form, variableValues, version]);
 
 	return (
 		<form

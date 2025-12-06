@@ -129,6 +129,7 @@ export type Database = {
           data: Json
           id: string
           is_error: boolean
+          is_test: boolean
           version_id: string | null
           workspace_id: string
         }
@@ -137,6 +138,7 @@ export type Database = {
           data?: Json
           id: string
           is_error?: boolean
+          is_test?: boolean
           version_id?: string | null
           workspace_id: string
         }
@@ -145,6 +147,7 @@ export type Database = {
           data?: Json
           id?: string
           is_error?: boolean
+          is_test?: boolean
           version_id?: string | null
           workspace_id?: string
         }
