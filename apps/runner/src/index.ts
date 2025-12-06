@@ -91,24 +91,8 @@ const prepareProviderAndMessages = async (data: VersionData, variables: Record<s
     };
 }
 
-const streamResult = async (data: VersionData, variables: Record<string, string>) => {
-    const { maxOutputTokens, outputFormat, temperature, maxStepCount } = data
-    const { model, processedMessages } = await prepareProviderAndMessages(data, variables);
-
-    const result = streamText({
-        model,
-        maxOutputTokens,
-        temperature,
-        stopWhen: stepCountIs(maxStepCount || 10),
-        messages: processedMessages,
-        output: outputFormat === "json" ? Output.json() : Output.text(),
-    });
-
-    return result;
-}
-
 // Helper to create SSE stream from AI result
-const createSSEStream = (result: Awaited<ReturnType<typeof streamResult>>) => {
+const createSSEStream = (result: Awaited<ReturnType<typeof streamText>>) => {
     const encoder = new TextEncoder();
 
     return new ReadableStream({
@@ -169,7 +153,18 @@ fastify.post('/api/v1/test', async (request, reply) => {
         return reply.code(403).send({ message: 'Access denied' });
     }
 
-    const result = await streamResult(versionData, variables);
+    const { maxOutputTokens, outputFormat, temperature, maxStepCount } = versionData
+    const { model, processedMessages } = await prepareProviderAndMessages(versionData, variables);
+
+    const result = streamText({
+        model,
+        maxOutputTokens,
+        temperature,
+        stopWhen: stepCountIs(maxStepCount || 10),
+        messages: processedMessages,
+        output: outputFormat === "json" ? Output.json() : Output.text(),
+    });
+
     const stream = createSSEStream(result);
 
     reply.headers({

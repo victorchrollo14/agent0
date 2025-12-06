@@ -45,7 +45,7 @@ function RouteComponent() {
 
 					navigate({
 						to: key.toString(),
-					})
+					});
 				}}
 				shadow="none"
 				radius="none"
@@ -100,9 +100,7 @@ function RouteComponent() {
 									)}
 								</TableCell>
 
-								<TableCell>
-									{item.versions?.agents?.name || "Unknown"}
-								</TableCell>
+								<TableCell>{item.versions?.agents?.name || "-"}</TableCell>
 								<TableCell>
 									<IDCopy id={item.id} />
 								</TableCell>
@@ -125,10 +123,10 @@ function RouteComponent() {
 									</Dropdown>
 								</TableCell>
 							</TableRow>
-						)
+						);
 					}}
 				</TableBody>
 			</Table>
 		</div>
-	)
+	);
 }
