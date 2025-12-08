@@ -44,6 +44,7 @@ import type { assistantMessageSchema } from "@/components/assistant-message";
 import { HistoryDrawer } from "@/components/history-drawer";
 import { Messages, type MessageT, messageSchema } from "@/components/messages";
 import { ModelSelector } from "@/components/model-selector";
+import ToolsSelector from "@/components/tools-selector";
 import { VariablesDrawer } from "@/components/variables-drawer";
 import { copyToClipboard } from "@/lib/clipboard";
 import { agentQuery, agentVersionsQuery, providersQuery } from "@/lib/queries";
@@ -66,6 +67,12 @@ const agentFormSchema = z.object({
 	temperature: z.number(),
 	maxStepCount: z.number(),
 	messages: z.array(messageSchema).min(1, "At least one message is required"),
+	tools: z.array(
+		z.object({
+			mcp_id: z.string(),
+			name: z.string(),
+		}),
+	),
 });
 
 function RouteComponent() {
@@ -150,6 +157,7 @@ function RouteComponent() {
 					temperature: values.temperature,
 					maxStepCount: values.maxStepCount,
 					messages: values.messages,
+					tools: values.tools,
 				} as unknown as Json,
 				is_deployed: false,
 			});
@@ -196,6 +204,7 @@ function RouteComponent() {
 						temperature: values.temperature,
 						maxStepCount: values.maxStepCount,
 						messages: values.messages,
+						tools: values.tools,
 					} as unknown as Json,
 					is_deployed: false,
 				})
@@ -301,6 +310,7 @@ function RouteComponent() {
 					content: "",
 				},
 			] as MessageT[],
+			tools: [] as { mcp_id: string; name: string }[],
 		},
 		validators: {
 			onChange: agentFormSchema,
@@ -343,6 +353,7 @@ function RouteComponent() {
 					temperature: data.temperature || 0.7,
 					maxStepCount: data.maxStepCount || 10,
 					messages: data.messages || [],
+					tools: data.tools || [],
 				},
 				{ keepDefaultValues: true },
 			);
@@ -756,6 +767,17 @@ function RouteComponent() {
 									</form.Field>
 								</PopoverContent>
 							</Popover>
+
+							<form.Field name="tools">
+								{(field) => (
+									<ToolsSelector
+										workspaceId={workspaceId}
+										value={field.state.value}
+										onValueChange={field.handleChange}
+										isInvalid={field.state.meta.errors.length > 0}
+									/>
+								)}
+							</form.Field>
 						</div>
 						<Button
 							size="sm"
