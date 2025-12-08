@@ -10,6 +10,7 @@
 		"@ai-sdk/azure": "3.0.0-beta.80",
 		"@ai-sdk/google": "3.0.0-beta.62",
 		"@ai-sdk/google-vertex": "4.0.0-beta.96",
+		"@ai-sdk/mcp": "^0.0.11",
 		"@ai-sdk/openai": "3.0.0-beta.78",
 		"@ai-sdk/xai": "3.0.0-beta.48",
 		"@fastify/cors": "^11.1.0",

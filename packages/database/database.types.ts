@@ -94,6 +94,7 @@ export type Database = {
           encrypted_data: Json
           id: string
           name: string
+          tools: Json | null
           updated_at: string
           workspace_id: string
         }
@@ -102,6 +103,7 @@ export type Database = {
           encrypted_data: Json
           id: string
           name: string
+          tools?: Json | null
           updated_at?: string
           workspace_id: string
         }
@@ -110,6 +112,7 @@ export type Database = {
           encrypted_data?: Json
           id?: string
           name?: string
+          tools?: Json | null
           updated_at?: string
           workspace_id?: string
         }
