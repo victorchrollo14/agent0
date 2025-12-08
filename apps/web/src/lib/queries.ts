@@ -29,6 +29,22 @@ export const providersQuery = (workspaceId: string) => queryOptions({
     enabled: !!workspaceId,
 })
 
+export const mcpsQuery = (workspaceId: string) => queryOptions({
+    queryKey: ["mcps", workspaceId],
+    queryFn: async () => {
+        const { data, error } = await supabase
+            .from("mcps")
+            .select("id, name, created_at, updated_at")
+            .eq("workspace_id", workspaceId)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        return data;
+    },
+    enabled: !!workspaceId,
+})
+
 export const agentsQuery = (workspaceId: string) => queryOptions({
     queryKey: ["agents", workspaceId],
     queryFn: async () => {

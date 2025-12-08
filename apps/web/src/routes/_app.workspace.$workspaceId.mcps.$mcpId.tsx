@@ -1,0 +1,274 @@
+import { addToast, Button, Input, Textarea } from "@heroui/react";
+import { useForm } from "@tanstack/react-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
+import { nanoid } from "nanoid";
+import * as openpgp from "openpgp";
+import { mcpsQuery } from "@/lib/queries";
+import { supabase } from "@/lib/supabase";
+
+export const Route = createFileRoute(
+	"/_app/workspace/$workspaceId/mcps/$mcpId",
+)({
+	component: RouteComponent,
+});
+
+// Validate JSON helper
+function validateJsonField(value: string) {
+	if (!value || value.trim() === "") {
+		return "Configuration is required";
+	}
+	try {
+		JSON.parse(value);
+		return undefined;
+	} catch (e) {
+		return e instanceof Error ? e.message : "Invalid JSON format";
+	}
+}
+
+function RouteComponent() {
+	const { workspaceId, mcpId } = Route.useParams();
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+	const isNewMcp = mcpId === "new";
+
+	// Fetch existing MCP if editing
+	const { data: mcps } = useQuery({
+		...mcpsQuery(workspaceId),
+		enabled: !isNewMcp,
+	});
+
+	const currentMcp = mcps?.find((m) => m.id === mcpId);
+
+	// Create mutation
+	const createMutation = useMutation({
+		mutationFn: async (values: { name: string; data: string }) => {
+			const publicKey = await openpgp.readKey({
+				armoredKey: import.meta.env.VITE_PUBLIC_PGP_PUBLIC_KEY,
+			});
+
+			const encrypted_data = await openpgp.encrypt({
+				encryptionKeys: publicKey,
+				message: await openpgp.createMessage({
+					text: values.data,
+				}),
+			});
+
+			const { error } = await supabase.from("mcps").insert({
+				id: nanoid(),
+				name: values.name,
+				encrypted_data,
+				workspace_id: workspaceId,
+			});
+
+			if (error) throw error;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["mcps", workspaceId] });
+			addToast({
+				description: "MCP server created successfully.",
+				color: "success",
+			});
+			navigate({
+				to: "/workspace/$workspaceId/mcps",
+				params: { workspaceId },
+			});
+		},
+		onError: (error) => {
+			addToast({
+				description:
+					error instanceof Error
+						? error.message
+						: "Failed to create MCP server.",
+				color: "danger",
+			});
+		},
+	});
+
+	// Update mutation
+	const updateMutation = useMutation({
+		mutationFn: async (values: { name: string; data: string }) => {
+			const publicKey = await openpgp.readKey({
+				armoredKey: import.meta.env.VITE_PUBLIC_PGP_PUBLIC_KEY,
+			});
+
+			const encrypted_data = await openpgp.encrypt({
+				encryptionKeys: publicKey,
+				message: await openpgp.createMessage({
+					text: values.data,
+				}),
+			});
+
+			const { error } = await supabase
+				.from("mcps")
+				.update({
+					name: values.name,
+					encrypted_data,
+					updated_at: new Date().toISOString(),
+				})
+				.eq("id", mcpId);
+
+			if (error) throw error;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["mcps", workspaceId] });
+			addToast({
+				description: "MCP server updated successfully.",
+				color: "success",
+			});
+			navigate({
+				to: "/workspace/$workspaceId/mcps",
+				params: { workspaceId },
+			});
+		},
+		onError: (error) => {
+			addToast({
+				description:
+					error instanceof Error
+						? error.message
+						: "Failed to update MCP server.",
+				color: "danger",
+			});
+		},
+	});
+
+	// Initialize TanStack Form
+	const form = useForm({
+		defaultValues: {
+			name: currentMcp?.name || "",
+			data: "",
+		},
+		onSubmit: async ({ value }) => {
+			if (isNewMcp) {
+				await createMutation.mutateAsync(value);
+			} else {
+				await updateMutation.mutateAsync(value);
+			}
+		},
+	});
+
+	const isLoading = createMutation.isPending || updateMutation.isPending;
+
+	return (
+		<div>
+			<div className="flex items-center p-2">
+				<Button
+					variant="light"
+					isIconOnly
+					onPress={() =>
+						navigate({
+							to: "..",
+						})
+					}
+				>
+					<ArrowLeft className="size-4" />
+				</Button>
+			</div>
+
+			<div className="p-6 max-w-4xl mx-auto space-y-6">
+				<h1 className="text-xl font-medium tracking-tight">
+					{isNewMcp ? "Add New MCP Server" : "Edit MCP Server"}
+				</h1>
+
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						form.handleSubmit();
+					}}
+					className="space-y-4"
+				>
+					{/* Name Field */}
+					<form.Field
+						name="name"
+						validators={{
+							onChange: ({ value }) =>
+								!value || value.trim() === ""
+									? "MCP server name is required"
+									: undefined,
+						}}
+					>
+						{(field) => (
+							<Input
+								label="Name"
+								placeholder="e.g., my-mcp-server"
+								value={field.state.value}
+								onValueChange={field.handleChange}
+								isRequired
+								variant="bordered"
+								description="A friendly name to identify this MCP server"
+								isInvalid={field.state.meta.errors.length > 0}
+								errorMessage={field.state.meta.errors[0]}
+							/>
+						)}
+					</form.Field>
+
+					{/* Data Field */}
+					<form.Field
+						name="data"
+						validators={{
+							onChange: ({ value }) => validateJsonField(value),
+						}}
+					>
+						{(field) => (
+							<Textarea
+								label="Configuration (JSON)"
+								placeholder={`{
+    "transport": {
+    	"type": "http",
+    	"url": "https://your-server.com/mcp",
+    	"headers": { "Authorization": "Bearer my-api-key" }
+    }
+}`}
+								value={field.state.value}
+								onValueChange={field.handleChange}
+								isRequired
+								variant="bordered"
+								minRows={10}
+								classNames={{
+									input: "font-mono text-sm",
+								}}
+								description="MCP server configuration in JSON format. See Vercel AI SDK MCP docs for details."
+								isInvalid={field.state.meta.errors.length > 0}
+								errorMessage={field.state.meta.errors[0]}
+							/>
+						)}
+					</form.Field>
+
+					<div className="flex justify-end gap-3">
+						<Button
+							variant="light"
+							onPress={() =>
+								navigate({
+									to: "/workspace/$workspaceId/mcps",
+									params: { workspaceId },
+								})
+							}
+							isDisabled={isLoading}
+						>
+							Cancel
+						</Button>
+						<form.Subscribe
+							selector={(state) => ({
+								canSubmit: state.canSubmit,
+								isSubmitting: state.isSubmitting,
+							})}
+						>
+							{(state) => (
+								<Button
+									type="submit"
+									color="primary"
+									isLoading={isLoading || state.isSubmitting}
+									isDisabled={!state.canSubmit || isLoading}
+								>
+									{isNewMcp ? "Create" : "Update"}
+								</Button>
+							)}
+						</form.Subscribe>
+					</div>
+				</form>
+			</div>
+		</div>
+	);
+}

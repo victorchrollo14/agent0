@@ -18,6 +18,7 @@ import {
 	LucideLogOut,
 	LucidePlusSquare,
 	PlayCircle,
+	Plug,
 	Server,
 	Settings,
 } from "lucide-react";
@@ -66,6 +67,12 @@ export function Sidebar({ workspaceId }: SidebarProps) {
 				icon: Server,
 				path: `/workspace/${workspaceId}/providers`,
 				active: location.pathname === `/workspace/${workspaceId}/providers`,
+			},
+			{
+				label: "MCP Servers",
+				icon: Plug,
+				path: `/workspace/${workspaceId}/mcps`,
+				active: location.pathname === `/workspace/${workspaceId}/mcps`,
 			},
 		];
 
