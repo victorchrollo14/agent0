@@ -5,12 +5,14 @@ import {
 	DropdownItem,
 	DropdownMenu,
 	DropdownTrigger,
+	Spinner,
 	Table,
 	TableBody,
 	TableCell,
 	TableColumn,
 	TableHeader,
 	TableRow,
+	Tooltip,
 } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -19,6 +21,8 @@ import {
 	AlertCircle,
 	CheckCircle2,
 	FlaskConical,
+	LucideChevronLeft,
+	LucideChevronRight,
 	LucideEllipsisVertical,
 } from "lucide-react";
 import IDCopy from "@/components/id-copy";
@@ -26,12 +30,18 @@ import { runsQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceId/runs/")({
 	component: RouteComponent,
+	validateSearch: (search: Record<string, unknown>): { page: number } => {
+		return {
+			page: Number(search?.page ?? 1),
+		};
+	},
 });
 
 function RouteComponent() {
 	const { workspaceId } = Route.useParams();
-	const navigate = useNavigate();
-	const { data: runs, isLoading } = useQuery(runsQuery(workspaceId));
+	const { page } = Route.useSearch();
+	const navigate = useNavigate({ from: Route.fullPath });
+	const { data: runs, isLoading } = useQuery(runsQuery(workspaceId, page));
 
 	return (
 		<div className="h-screen overflow-hidden flex flex-col">
@@ -43,17 +53,48 @@ function RouteComponent() {
 				aria-label="Runs Table"
 				onRowAction={(key) => {
 					if (!key) return;
-
 					navigate({
-						to: key.toString(),
+						to: `$runId`,
+						params: {
+							runId: key.toString(),
+						},
 					});
 				}}
 				shadow="none"
 				radius="none"
-				// topContent={<div className="h-10 w-full bg-red-200">Filters</div>}
-				// bottomContent={
-				// 	<div className="h-10 w-full bg-red-200">LoadMore/Pagination</div>
-				// }
+				topContent={
+					<div className="h-10 w-full flex justify-between">
+						<div />
+						<div className="flex gap-2">
+							<Tooltip content="Previous">
+								<Button
+									size="sm"
+									isIconOnly
+									variant="flat"
+									isDisabled={page === 1}
+									onPress={() =>
+										navigate({
+											search: { page: page - 1 },
+										})
+									}
+								>
+									<LucideChevronLeft className="size-3.5" />
+								</Button>
+							</Tooltip>
+							<Tooltip content="Next">
+								<Button
+									size="sm"
+									isIconOnly
+									variant="flat"
+									isDisabled={!runs || runs.length < 20}
+									onPress={() => navigate({ search: { page: page + 1 } })}
+								>
+									<LucideChevronRight className="size-3.5" />
+								</Button>
+							</Tooltip>
+						</div>
+					</div>
+				}
 				classNames={{
 					base: "overflow-scroll flex-1",
 				}}
@@ -71,6 +112,7 @@ function RouteComponent() {
 				<TableBody
 					items={runs || []}
 					isLoading={isLoading}
+					loadingContent={<Spinner />}
 					emptyContent="No runs found."
 				>
 					{(item) => {
@@ -128,7 +170,9 @@ function RouteComponent() {
 										<DropdownMenu>
 											<DropdownItem
 												key={item.id}
-												onPress={() => navigate({ to: item.id })}
+												onPress={() =>
+													navigate({ to: "$runId", params: { runId: item.id } })
+												}
 											>
 												View
 											</DropdownItem>
