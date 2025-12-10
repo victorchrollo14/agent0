@@ -13,6 +13,7 @@
 	},
 	"dependencies": {
 		"@heroui/react": "^2.8.5",
+		"@internationalized/date": "^3.10.0",
 		"@repo/database": "workspace:*",
 		"@supabase/supabase-js": "^2.84.0",
 		"@tailwindcss/vite": "^4.0.6",
