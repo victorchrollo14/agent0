@@ -351,7 +351,7 @@ function RouteComponent() {
 					model: data.model || { provider_id: "", name: "" },
 					maxOutputTokens: data.maxOutputTokens || 2048,
 					outputFormat: data.outputFormat || "text",
-					temperature: data.temperature || 0.7,
+					temperature: data.temperature ?? 0.7,
 					maxStepCount: data.maxStepCount || 10,
 					messages: data.messages || [],
 					tools: data.tools || [],
