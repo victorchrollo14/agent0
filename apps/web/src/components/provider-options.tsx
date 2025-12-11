@@ -6,6 +6,7 @@ import { Divider, Input, Select, SelectItem, Switch } from "@heroui/react";
 export type ProviderOptionsValue = {
 	openai?: {
 		reasoningEffort?: "minimal" | "low" | "medium" | "high";
+		reasoningSummary?: "auto" | "detailed";
 	};
 	xai?: {
 		reasoningEffort?: "low" | "medium" | "high";
@@ -47,38 +48,77 @@ export function ProviderOptions({
 		<>
 			<Divider className="my-2" />
 
-			{/* OpenAI / Azure reasoning effort */}
+			{/* OpenAI / Azure reasoning options */}
 			{(providerType === "openai" || providerType === "azure") && (
-				<Select
-					variant="bordered"
-					label="Reasoning Effort"
-					placeholder="Not set"
-					selectedKeys={
-						value?.openai?.reasoningEffort ? [value.openai.reasoningEffort] : []
-					}
-					onSelectionChange={(keys) => {
-						const selected = Array.from(keys)[0] as
-							| "minimal"
-							| "low"
-							| "medium"
-							| "high"
-							| undefined;
-						onValueChange({
-							...value,
-							openai: { reasoningEffort: selected },
-						});
-					}}
-				>
-					<SelectItem key="minimal">Minimal</SelectItem>
-					<SelectItem key="low">Low</SelectItem>
-					<SelectItem key="medium">Medium</SelectItem>
-					<SelectItem key="high">High</SelectItem>
-				</Select>
+				<>
+					<Select
+						isClearable
+						variant="bordered"
+						label="Reasoning Effort"
+						placeholder="Not set"
+						selectedKeys={
+							value?.openai?.reasoningEffort
+								? [value.openai.reasoningEffort]
+								: []
+						}
+						onSelectionChange={(keys) => {
+							const selected = Array.from(keys)[0] as
+								| "minimal"
+								| "low"
+								| "medium"
+								| "high"
+								| undefined;
+							onValueChange({
+								...value,
+								openai: {
+									...value?.openai,
+									reasoningEffort: selected,
+								},
+							});
+						}}
+					>
+						<SelectItem key="minimal">Minimal</SelectItem>
+						<SelectItem key="low">Low</SelectItem>
+						<SelectItem key="medium">Medium</SelectItem>
+						<SelectItem key="high">High</SelectItem>
+					</Select>
+					<Select
+						isClearable
+						variant="bordered"
+						label="Reasoning Summary"
+						placeholder="Not set"
+						description="Controls whether the model returns its reasoning process"
+						selectedKeys={
+							value?.openai?.reasoningSummary
+								? [value.openai.reasoningSummary]
+								: []
+						}
+						onSelectionChange={(keys) => {
+							const selected = Array.from(keys)[0] as
+								| "auto"
+								| "detailed"
+								| undefined;
+							onValueChange({
+								...value,
+								openai: {
+									...value?.openai,
+									reasoningSummary: selected,
+								},
+							});
+						}}
+					>
+						<SelectItem key="auto">Auto (condensed summary)</SelectItem>
+						<SelectItem key="detailed">
+							Detailed (comprehensive reasoning)
+						</SelectItem>
+					</Select>
+				</>
 			)}
 
 			{/* xAI reasoning effort */}
 			{providerType === "xai" && (
 				<Select
+					isClearable
 					variant="bordered"
 					label="Reasoning Effort"
 					placeholder="Not set"

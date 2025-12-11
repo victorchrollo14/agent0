@@ -69,7 +69,7 @@ function AssistantMessagePart({
 				className="outline-none w-full resize-none text-sm"
 				readOnly={isReadOnly}
 				maxRows={1000000000000}
-				placeholder="Enter assistant message..."
+				placeholder="Assistant message..."
 				value={value.text}
 				onChange={(e) => {
 					onValueChange({
@@ -84,10 +84,10 @@ function AssistantMessagePart({
 	if (value.type === "reasoning") {
 		return (
 			<TextareaAutosize
-				className="outline-none w-full resize-none text-sm text-default-500"
+				className="outline-none w-full resize-none text-sm text-default-500 italic"
 				readOnly={isReadOnly}
 				maxRows={1000000000000}
-				placeholder="Enter assistant reasoning..."
+				placeholder="Assistant reasoning..."
 				value={value.text}
 				onChange={(e) => {
 					onValueChange({

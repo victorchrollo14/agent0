@@ -7,6 +7,7 @@ import type { ModelMessage, StepResult, ToolSet } from "ai";
 export type ProviderOptions = {
 	openai?: {
 		reasoningEffort?: "minimal" | "low" | "medium" | "high";
+		reasoningSummary?: "auto" | "detailed";
 	};
 	xai?: {
 		reasoningEffort?: "low" | "medium" | "high";

@@ -104,6 +104,7 @@ interface ModelOverrides {
 interface ProviderOptions {
   openai?: {
     reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high';
+    reasoningSummary?: 'auto' | 'detailed';
   };
   xai?: {
     reasoningEffort?: 'low' | 'medium' | 'high';
@@ -299,7 +300,7 @@ async function runWithFallback(agentId: string, variables: Record<string, string
 
 The `providerOptions` option allows you to configure provider-specific reasoning and thinking behavior. Different providers have different options:
 
-**OpenAI / Azure** - Use `reasoningEffort` to control how much reasoning the model does:
+**OpenAI / Azure** - Use `reasoningEffort` to control how much reasoning the model does, and `reasoningSummary` to control whether the model returns its reasoning process:
 
 ```typescript
 const response = await client.generate({
@@ -307,12 +308,17 @@ const response = await client.generate({
   overrides: {
     providerOptions: {
       openai: {
-        reasoningEffort: 'high' // 'minimal' | 'low' | 'medium' | 'high'
+        reasoningEffort: 'high', // 'minimal' | 'low' | 'medium' | 'high'
+        reasoningSummary: 'auto' // 'auto' | 'detailed' - controls reasoning output
       }
     }
   }
 });
 ```
+
+- `reasoningSummary: 'auto'` - Returns a condensed summary of the reasoning process
+- `reasoningSummary: 'detailed'` - Returns more comprehensive reasoning
+- When enabled, reasoning summaries appear in the stream as events with type `'reasoning'` and in non-streaming responses within the `reasoning` field
 
 **xAI (Grok)** - Use `reasoningEffort` to control reasoning:
 

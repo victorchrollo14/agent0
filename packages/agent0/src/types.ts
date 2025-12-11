@@ -13,6 +13,7 @@ export interface ProviderOptions {
 	/** OpenAI reasoning effort options */
 	openai?: {
 		reasoningEffort?: "minimal" | "low" | "medium" | "high";
+		reasoningSummary?: "auto" | "detailed";
 	};
 	/** xAI reasoning effort options */
 	xai?: {
