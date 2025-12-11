@@ -176,15 +176,7 @@ function RouteComponent() {
 			const { error: versionError } = await supabase.from("versions").insert({
 				id: newVersionId,
 				agent_id: newAgentId,
-				data: {
-					model: values.model,
-					maxOutputTokens: values.maxOutputTokens,
-					outputFormat: values.outputFormat,
-					temperature: values.temperature,
-					maxStepCount: values.maxStepCount,
-					messages: values.messages,
-					tools: values.tools,
-				} as unknown as Json,
+				data: values as unknown as Json,
 				is_deployed: false,
 			});
 
@@ -223,15 +215,7 @@ function RouteComponent() {
 				.insert({
 					id: newVersionId,
 					agent_id: agentId,
-					data: {
-						model: values.model,
-						maxOutputTokens: values.maxOutputTokens,
-						outputFormat: values.outputFormat,
-						temperature: values.temperature,
-						maxStepCount: values.maxStepCount,
-						messages: values.messages,
-						tools: values.tools,
-					} as unknown as Json,
+					data: values as unknown as Json,
 					is_deployed: false,
 				})
 				.select()
