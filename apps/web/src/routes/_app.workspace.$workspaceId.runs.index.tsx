@@ -27,6 +27,7 @@ import {
 	RefreshCw,
 } from "lucide-react";
 import { useMemo } from "react";
+import { AgentFilter } from "@/components/agent-filter";
 import {
 	computeDateRangeFromPreset,
 	DateRangePicker,
@@ -43,6 +44,7 @@ export const Route = createFileRoute("/_app/workspace/$workspaceId/runs/")({
 		startDate?: string;
 		endDate?: string;
 		datePreset?: string;
+		agentId?: string;
 	} => {
 		let dateValues:
 			| { datePreset: string }
@@ -65,6 +67,7 @@ export const Route = createFileRoute("/_app/workspace/$workspaceId/runs/")({
 
 		return {
 			page: Number(search?.page ?? 1),
+			agentId: search.agentId as string | undefined,
 			...dateValues,
 		};
 	},
@@ -72,7 +75,7 @@ export const Route = createFileRoute("/_app/workspace/$workspaceId/runs/")({
 
 function RouteComponent() {
 	const { workspaceId } = Route.useParams();
-	const { page, ...dateValues } = Route.useSearch();
+	const { page, agentId, ...dateValues } = Route.useSearch();
 	const navigate = useNavigate({ from: Route.fullPath });
 
 	// Compute the date range from preset or custom dates
@@ -94,7 +97,7 @@ function RouteComponent() {
 		isLoading,
 		isFetching,
 		refetch,
-	} = useQuery(runsQuery(workspaceId, page, dateRange));
+	} = useQuery(runsQuery(workspaceId, page, dateRange, agentId));
 
 	return (
 		<div className="h-screen overflow-hidden flex flex-col">
@@ -116,14 +119,28 @@ function RouteComponent() {
 				shadow="none"
 				radius="none"
 				topContent={
-					<div className="h-10 w-full flex justify-between">
-						<div>
+					<div className="w-full flex justify-between items-center">
+						<div className="flex items-center gap-2">
 							<DateRangePicker
 								value={dateValues}
 								onValueChange={(value) =>
 									navigate({
 										search: {
 											...value,
+											agentId,
+											page: 1,
+										},
+									})
+								}
+							/>
+							<AgentFilter
+								workspaceId={workspaceId}
+								value={agentId}
+								onValueChange={(newAgentId) =>
+									navigate({
+										search: {
+											...dateValues,
+											agentId: newAgentId,
 											page: 1,
 										},
 									})

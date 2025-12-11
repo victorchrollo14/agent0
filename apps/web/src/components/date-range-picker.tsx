@@ -1,12 +1,8 @@
 import {
 	Button,
 	DateRangePicker as HeroDateRangePicker,
-	Listbox,
-	ListboxItem,
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-	useDisclosure,
+	Select,
+	SelectItem,
 } from "@heroui/react";
 import {
 	type CalendarDate,
@@ -15,7 +11,7 @@ import {
 	today,
 } from "@internationalized/date";
 import { format } from "date-fns";
-import { Calendar, ChevronDown, LucideX } from "lucide-react";
+import { LucideArrowLeft, LucideCalendar } from "lucide-react";
 import { useMemo, useState } from "react";
 
 const DATE_PRESETS = [
@@ -42,6 +38,10 @@ const DATE_PRESETS = [
 	{
 		key: "7days",
 		label: "Last 7 Days",
+	},
+	{
+		key: "custom",
+		label: "Custom...",
 	},
 ];
 
@@ -105,32 +105,24 @@ export function computeDateRangeFromPreset(
 }
 
 /**
- * Helper to get display label for current value
+ * Helper to get display label for custom date range
  */
-function getDisplayLabel(value: Value): string {
-	if (value.datePreset) {
-		const preset = DATE_PRESETS.find((p) => p.key === value.datePreset);
-		return preset?.label || "Select Date";
-	}
-
+function getCustomDateLabel(value: Value): string {
 	if (value.startDate && value.endDate) {
 		const start = new Date(value.startDate);
 		const end = new Date(value.endDate);
 		return `${format(start, "MMM d")} - ${format(end, "MMM d")}`;
 	}
-
-	return "Select Date";
+	return "Custom...";
 }
 
 export function DateRangePicker({
 	value,
 	onValueChange,
 }: DateRangePickerProps) {
-	const { isOpen, onOpenChange } = useDisclosure();
 	const [showCustom, setShowCustom] = useState(
 		!!(value.startDate && value.endDate && !value.datePreset),
 	);
-	// Separate state to control the calendar popover
 	const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
 	// Convert custom date strings to CalendarDate for HeroDateRangePicker
@@ -150,107 +142,98 @@ export function DateRangePicker({
 		return null;
 	}, [value.startDate, value.endDate]);
 
-	const displayLabel = getDisplayLabel(value);
+	// Determine selected key for the Select
+	const selectedKey = value.datePreset || (showCustom ? "custom" : undefined);
 
 	if (showCustom) {
 		return (
-			<div className="flex gap-1 items-center">
-				<HeroDateRangePicker
-					size="sm"
-					aria-label="Select date range"
-					value={customDateValue}
-					maxValue={today(getLocalTimeZone())}
-					isOpen={isCalendarOpen}
-					onOpenChange={setIsCalendarOpen}
-					onChange={(
-						range: { start: CalendarDate; end: CalendarDate } | null,
-					) => {
-						if (range) {
-							// Convert CalendarDate to ISO string for start of day / end of day
-							const startDate = range.start.toDate(getLocalTimeZone());
-							startDate.setHours(0, 0, 0, 0);
+			<HeroDateRangePicker
+				variant="bordered"
+				size="sm"
+				className="w-64"
+				aria-label="Select date range"
+				value={customDateValue}
+				maxValue={today(getLocalTimeZone())}
+				isOpen={isCalendarOpen}
+				onOpenChange={setIsCalendarOpen}
+				onChange={(
+					range: { start: CalendarDate; end: CalendarDate } | null,
+				) => {
+					if (range) {
+						// Convert CalendarDate to ISO string for start of day / end of day
+						const startDate = range.start.toDate(getLocalTimeZone());
+						startDate.setHours(0, 0, 0, 0);
 
-							const endDate = range.end.toDate(getLocalTimeZone());
-							endDate.setHours(23, 59, 59, 999);
+						const endDate = range.end.toDate(getLocalTimeZone());
+						endDate.setHours(23, 59, 59, 999);
 
-							onValueChange({
-								startDate: startDate.toISOString(),
-								endDate: endDate.toISOString(),
-							});
-						}
-					}}
-				/>
-				<Button
-					size="sm"
-					isIconOnly
-					variant="light"
-					onPress={() => {
-						setShowCustom(false);
-						setIsCalendarOpen(false);
 						onValueChange({
-							datePreset: "1hr",
+							startDate: startDate.toISOString(),
+							endDate: endDate.toISOString(),
 						});
-					}}
-				>
-					<LucideX className="size-3.5" />
-				</Button>
-			</div>
+					}
+				}}
+				CalendarTopContent={
+					<div className="p-2">
+						<Button
+							fullWidth
+							variant="light"
+							size="sm"
+							onPress={() => {
+								setShowCustom(false);
+								setIsCalendarOpen(false);
+								onValueChange({
+									datePreset: "1hr",
+								});
+							}}
+							startContent={<LucideArrowLeft className="size-3.5" />}
+						>
+							Back to Presets
+						</Button>
+					</div>
+				}
+			/>
 		);
 	}
 
 	return (
-		<Popover
-			placement="bottom-start"
-			isOpen={isOpen}
-			onOpenChange={onOpenChange}
+		<Select
+			startContent={<LucideCalendar className="size-3.5" />}
+			variant="bordered"
+			aria-label="Filter by date range"
+			placeholder="Select Date"
+			size="sm"
+			classNames={{
+				base: "w-44",
+				popoverContent: "w-[200px]",
+			}}
+			selectedKeys={selectedKey ? [selectedKey] : []}
+			onSelectionChange={(keys) => {
+				const key = Array.from(keys)[0] as string | undefined;
+				if (key === "custom") {
+					setShowCustom(true);
+					setIsCalendarOpen(true);
+				} else if (key) {
+					onValueChange({
+						datePreset: key,
+					});
+				}
+			}}
+			renderValue={(items) => {
+				const item = items[0];
+				if (!item) return "Select Date";
+
+				// For custom with dates selected, show the date range
+				if (item.key === "custom" && value.startDate && value.endDate) {
+					return getCustomDateLabel(value);
+				}
+
+				return item.textValue;
+			}}
 		>
-			<PopoverTrigger>
-				<Button
-					size="sm"
-					variant="flat"
-					startContent={<Calendar className="size-4" />}
-					endContent={<ChevronDown className="size-4" />}
-				>
-					{displayLabel}
-				</Button>
-			</PopoverTrigger>
-
-			<PopoverContent className="p-1">
-				<Listbox
-					aria-label="Date range presets"
-					selectedKeys={value.datePreset ? [value.datePreset] : []}
-					selectionMode="single"
-				>
-					{/** biome-ignore lint/complexity/noUselessFragments: <HeorUI Issue> */}
-					<>
-						{DATE_PRESETS.map((preset) => (
-							<ListboxItem
-								key={preset.key}
-								onPress={() => {
-									onValueChange({
-										datePreset: preset.key,
-									});
-									onOpenChange();
-								}}
-							>
-								{preset.label}
-							</ListboxItem>
-						))}
-					</>
-
-					<ListboxItem
-						key="custom"
-						onPress={() => {
-							setShowCustom(true);
-							// Auto-open the calendar when switching to custom mode
-							setIsCalendarOpen(true);
-							onOpenChange();
-						}}
-					>
-						Custom...
-					</ListboxItem>
-				</Listbox>
-			</PopoverContent>
-		</Popover>
+			{DATE_PRESETS.map((preset) => (
+				<SelectItem key={preset.key}>{preset.label}</SelectItem>
+			))}
+		</Select>
 	);
 }

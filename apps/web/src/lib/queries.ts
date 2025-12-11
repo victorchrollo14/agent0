@@ -120,19 +120,27 @@ export const runsQuery = (
 	workspaceId: string,
 	page: number,
 	dateRange?: { from: string; to: string },
+	agentId?: string,
 ) =>
 	queryOptions({
-		queryKey: ["runs", workspaceId, page, dateRange],
+		queryKey: ["runs", workspaceId, page, dateRange, agentId],
 		queryFn: async () => {
 			let query = supabase
 				.from("runs")
-				.select("id, is_error, is_test, created_at, versions(id, agents(name))")
+				.select(
+					"id, is_error, is_test, created_at, versions!inner(id, agent_id, agents(name))",
+				)
 				.eq("workspace_id", workspaceId);
 
 			// Apply date filtering if provided
 			if (dateRange) {
 				query = query.gte("created_at", dateRange.from);
 				query = query.lte("created_at", dateRange.to);
+			}
+
+			// Apply agent filtering if provided
+			if (agentId) {
+				query = query.eq("versions.agent_id", agentId);
 			}
 
 			query = query
