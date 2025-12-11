@@ -1,4 +1,4 @@
-import { Select, SelectItem } from "@heroui/react";
+import { Autocomplete, AutocompleteItem } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { LucideBot } from "lucide-react";
 import { agentsQuery } from "@/lib/queries";
@@ -17,7 +17,7 @@ export function AgentFilter({
 	const { data: agents } = useQuery(agentsQuery(workspaceId));
 
 	return (
-		<Select
+		<Autocomplete
 			startContent={<LucideBot className="size-3.5 shrink-0" />}
 			variant="bordered"
 			aria-label="Filter by agent"
@@ -28,15 +28,14 @@ export function AgentFilter({
 				popoverContent: "w-96",
 			}}
 			isClearable
-			selectedKeys={value ? [value] : []}
-			onSelectionChange={(keys) => {
-				const selectedKey = Array.from(keys)[0] as string | undefined;
-				onValueChange(selectedKey || undefined);
+			selectedKey={value ?? null}
+			onSelectionChange={(key) => {
+				onValueChange(key ? String(key) : undefined);
 			}}
 		>
 			{(agents || []).map((agent) => (
-				<SelectItem key={agent.id}>{agent.name}</SelectItem>
+				<AutocompleteItem key={agent.id}>{agent.name}</AutocompleteItem>
 			))}
-		</Select>
+		</Autocomplete>
 	);
 }
