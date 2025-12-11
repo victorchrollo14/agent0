@@ -33,6 +33,10 @@ import {
 	DateRangePicker,
 } from "@/components/date-range-picker";
 import IDCopy from "@/components/id-copy";
+import {
+	StatusFilter,
+	type StatusFilterValue,
+} from "@/components/status-filter";
 import { runsQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceId/runs/")({
@@ -45,6 +49,7 @@ export const Route = createFileRoute("/_app/workspace/$workspaceId/runs/")({
 		endDate?: string;
 		datePreset?: string;
 		agentId?: string;
+		status?: StatusFilterValue;
 	} => {
 		let dateValues:
 			| { datePreset: string }
@@ -68,6 +73,7 @@ export const Route = createFileRoute("/_app/workspace/$workspaceId/runs/")({
 		return {
 			page: Number(search?.page ?? 1),
 			agentId: search.agentId as string | undefined,
+			status: search.status as StatusFilterValue,
 			...dateValues,
 		};
 	},
@@ -75,7 +81,7 @@ export const Route = createFileRoute("/_app/workspace/$workspaceId/runs/")({
 
 function RouteComponent() {
 	const { workspaceId } = Route.useParams();
-	const { page, agentId, ...dateValues } = Route.useSearch();
+	const { page, agentId, status, ...dateValues } = Route.useSearch();
 	const navigate = useNavigate({ from: Route.fullPath });
 
 	// Compute the date range from preset or custom dates
@@ -97,7 +103,7 @@ function RouteComponent() {
 		isLoading,
 		isFetching,
 		refetch,
-	} = useQuery(runsQuery(workspaceId, page, dateRange, agentId));
+	} = useQuery(runsQuery(workspaceId, page, dateRange, agentId, status));
 
 	return (
 		<div className="h-screen overflow-hidden flex flex-col">
@@ -128,6 +134,7 @@ function RouteComponent() {
 										search: {
 											...value,
 											agentId,
+											status,
 											page: 1,
 										},
 									})
@@ -141,6 +148,20 @@ function RouteComponent() {
 										search: {
 											...dateValues,
 											agentId: newAgentId,
+											status,
+											page: 1,
+										},
+									})
+								}
+							/>
+							<StatusFilter
+								value={status}
+								onValueChange={(newStatus) =>
+									navigate({
+										search: {
+											...dateValues,
+											agentId,
+											status: newStatus,
 											page: 1,
 										},
 									})
@@ -169,7 +190,12 @@ function RouteComponent() {
 									isDisabled={page === 1}
 									onPress={() =>
 										navigate({
-											search: { ...dateValues, page: page - 1 },
+											search: {
+												...dateValues,
+												agentId,
+												status,
+												page: page - 1,
+											},
 										})
 									}
 								>
@@ -183,7 +209,14 @@ function RouteComponent() {
 									variant="flat"
 									isDisabled={!runs || runs.length < 20}
 									onPress={() =>
-										navigate({ search: { ...dateValues, page: page + 1 } })
+										navigate({
+											search: {
+												...dateValues,
+												agentId,
+												status,
+												page: page + 1,
+											},
+										})
 									}
 								>
 									<LucideChevronRight className="size-3.5" />

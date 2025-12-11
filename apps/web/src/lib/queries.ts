@@ -121,9 +121,10 @@ export const runsQuery = (
 	page: number,
 	dateRange?: { from: string; to: string },
 	agentId?: string,
+	status?: "success" | "failed",
 ) =>
 	queryOptions({
-		queryKey: ["runs", workspaceId, page, dateRange, agentId],
+		queryKey: ["runs", workspaceId, page, dateRange, agentId, status],
 		queryFn: async () => {
 			let query = supabase
 				.from("runs")
@@ -141,6 +142,13 @@ export const runsQuery = (
 			// Apply agent filtering if provided
 			if (agentId) {
 				query = query.eq("versions.agent_id", agentId);
+			}
+
+			// Apply status filtering if provided
+			if (status === "success") {
+				query = query.eq("is_error", false);
+			} else if (status === "failed") {
+				query = query.eq("is_error", true);
 			}
 
 			query = query
