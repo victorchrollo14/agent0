@@ -44,6 +44,7 @@ import type { assistantMessageSchema } from "@/components/assistant-message";
 import { HistoryDrawer } from "@/components/history-drawer";
 import { Messages, type MessageT, messageSchema } from "@/components/messages";
 import { ModelSelector } from "@/components/model-selector";
+import { ProviderOptions } from "@/components/provider-options";
 import ToolsSelector from "@/components/tools-selector";
 import { VariablesDrawer } from "@/components/variables-drawer";
 import { copyToClipboard } from "@/lib/clipboard";
@@ -73,6 +74,31 @@ const agentFormSchema = z.object({
 			name: z.string(),
 		}),
 	),
+	providerOptions: z.object({
+		openai: z
+			.object({
+				reasoningEffort: z
+					.enum(["minimal", "low", "medium", "high"])
+					.optional(),
+			})
+			.optional(),
+		xai: z
+			.object({
+				reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
+			})
+			.optional(),
+		google: z
+			.object({
+				thinkingConfig: z
+					.object({
+						thinkingBudget: z.number().optional(),
+						thinkingLevel: z.enum(["low", "medium", "high"]).optional(),
+						includeThoughts: z.boolean().optional(),
+					})
+					.optional(),
+			})
+			.optional(),
+	}),
 });
 
 function RouteComponent() {
@@ -311,6 +337,7 @@ function RouteComponent() {
 				},
 			] as MessageT[],
 			tools: [] as { mcp_id: string; name: string }[],
+			providerOptions: {} as z.infer<typeof agentFormSchema>["providerOptions"],
 		},
 		validators: {
 			onChange: agentFormSchema,
@@ -343,6 +370,7 @@ function RouteComponent() {
 			maxStepCount?: number;
 			messages?: MessageT[];
 			tools?: { mcp_id: string; name: string }[];
+			providerOptions?: z.infer<typeof agentFormSchema>["providerOptions"];
 		};
 
 		setTimeout(() => {
@@ -355,6 +383,7 @@ function RouteComponent() {
 					maxStepCount: data.maxStepCount || 10,
 					messages: data.messages || [],
 					tools: data.tools || [],
+					providerOptions: data.providerOptions || {},
 				},
 				{ keepDefaultValues: true },
 			);
@@ -458,6 +487,21 @@ function RouteComponent() {
 					const lastPart = lastMessage.content[lastMessage.content.length - 1];
 
 					if (lastPart.type === "text") {
+						lastPart.text += parsed.text;
+					}
+				}
+
+				if (parsed.type === "reasoning-start") {
+					lastMessage.content.push({
+						type: "reasoning",
+						text: "",
+					});
+				}
+
+				if (parsed.type === "reasoning-delta") {
+					const lastPart = lastMessage.content[lastMessage.content.length - 1];
+
+					if (lastPart.type === "reasoning") {
 						lastPart.text += parsed.text;
 					}
 				}
@@ -706,7 +750,7 @@ function RouteComponent() {
 										Parameters
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="p-4 flex flex-col gap-4 w-64">
+								<PopoverContent className="p-4 flex flex-col items-start gap-4 w-96">
 									<form.Field name="maxOutputTokens">
 										{(field) => (
 											<Input
@@ -766,6 +810,30 @@ function RouteComponent() {
 											/>
 										)}
 									</form.Field>
+
+									{/* Provider-specific options */}
+									<form.Subscribe selector={(state) => state.values.model}>
+										{(model) => {
+											const selectedProvider = providers?.find(
+												(p) => p.id === model.provider_id,
+											);
+											const providerType = selectedProvider?.type;
+
+											if (!providerType) return null;
+
+											return (
+												<form.Field name="providerOptions">
+													{(field) => (
+														<ProviderOptions
+															providerType={providerType}
+															value={field.state.value}
+															onValueChange={field.handleChange}
+														/>
+													)}
+												</form.Field>
+											);
+										}}
+									</form.Subscribe>
 								</PopoverContent>
 							</Popover>
 

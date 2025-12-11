@@ -86,7 +86,7 @@ function AssistantMessagePart({
 			<TextareaAutosize
 				className="outline-none w-full resize-none text-sm text-default-500"
 				readOnly={isReadOnly}
-				maxRows={10}
+				maxRows={1000000000000}
 				placeholder="Enter assistant reasoning..."
 				value={value.text}
 				onChange={(e) => {

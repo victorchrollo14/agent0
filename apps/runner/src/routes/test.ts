@@ -64,8 +64,13 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 			return reply.code(403).send({ message: "Access denied" });
 		}
 
-		const { maxOutputTokens, outputFormat, temperature, maxStepCount } =
-			versionData;
+		const {
+			maxOutputTokens,
+			outputFormat,
+			temperature,
+			maxStepCount,
+			providerOptions,
+		} = versionData;
 
 		const [{ model, processedMessages }, { tools, closeAll }] =
 			await Promise.all([
@@ -89,6 +94,7 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 			messages: processedMessages,
 			tools: tools as ToolSet,
 			output: outputFormat === "json" ? Output.json() : Output.text(),
+			providerOptions,
 			onChunk: () => {
 				if (runData.metrics.firstTokenTime === 0) {
 					runData.metrics.firstTokenTime =

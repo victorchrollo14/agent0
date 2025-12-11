@@ -14,7 +14,7 @@ import {
 	prepareMCPServers,
 	prepareProviderAndMessages,
 } from "../lib/helpers.js";
-import type { RunData, VersionData } from "../lib/types.js";
+import type { ProviderOptions, RunData, VersionData } from "../lib/types.js";
 
 export async function registerRunRoute(fastify: FastifyInstance) {
 	fastify.post("/api/v1/run", async (request, reply) => {
@@ -46,6 +46,7 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 				maxOutputTokens?: number;
 				temperature?: number;
 				maxStepCount?: number;
+				providerOptions?: ProviderOptions;
 			};
 			extra_messages?: ModelMessage[];
 		};
@@ -99,6 +100,11 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 				data.temperature = overrides.temperature;
 			if (overrides.maxStepCount !== undefined)
 				data.maxStepCount = overrides.maxStepCount;
+			if (overrides.providerOptions)
+				data.providerOptions = {
+					...data.providerOptions,
+					...overrides.providerOptions,
+				};
 		}
 
 		const [{ model, processedMessages }, { tools, closeAll }] =
@@ -107,7 +113,13 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 				prepareMCPServers(data),
 			]);
 
-		const { maxOutputTokens, outputFormat, temperature, maxStepCount } = data;
+		const {
+			maxOutputTokens,
+			outputFormat,
+			temperature,
+			maxStepCount,
+			providerOptions,
+		} = data;
 
 		// Append extra messages if provided (used as-is, no variable substitution)
 		const finalMessages = extra_messages
@@ -126,6 +138,7 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 				messages: finalMessages,
 				tools: tools as ToolSet,
 				output: outputFormat === "json" ? Output.json() : Output.text(),
+				providerOptions,
 				onChunk: () => {
 					if (runData.metrics.firstTokenTime === 0) {
 						runData.metrics.firstTokenTime =
@@ -197,6 +210,7 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 				messages: finalMessages,
 				tools: tools as ToolSet,
 				output: outputFormat === "json" ? Output.json() : Output.text(),
+				providerOptions,
 			});
 
 			const { response, text, steps } = result;

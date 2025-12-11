@@ -33,7 +33,12 @@ x-api-key: <your-api-key>
     },
     "maxOutputTokens": number (optional),
     "temperature": number (optional),
-    "maxStepCount": number (optional)
+    "maxStepCount": number (optional),
+    "providerOptions": {
+      "openai": { "reasoningEffort": "minimal" | "low" | "medium" | "high" },
+      "xai": { "reasoningEffort": "low" | "medium" | "high" },
+      "google": { "thinkingConfig": { "thinkingBudget": number, "thinkingLevel": "low" | "medium" | "high", "includeThoughts": boolean } }
+    }
   },
   "extra_messages": [
     { "role": "user", "content": "..." }
@@ -52,6 +57,10 @@ x-api-key: <your-api-key>
   - **maxOutputTokens**: Override the maximum output tokens
   - **temperature**: Override the temperature setting
   - **maxStepCount**: Override the maximum step count
+  - **providerOptions**: Provider-specific options for reasoning/thinking
+    - For OpenAI/Azure: `{ openai: { reasoningEffort: 'minimal' | 'low' | 'medium' | 'high' } }`
+    - For xAI: `{ xai: { reasoningEffort: 'low' | 'medium' | 'high' } }`
+    - For Google/Vertex: `{ google: { thinkingConfig: { thinkingBudget?: number, thinkingLevel?: 'low' | 'medium' | 'high', includeThoughts?: boolean } } }` (use either thinkingBudget OR thinkingLevel, not both)
   - **extra_messages** (optional): Array of messages to append to the agent's prompt (used as-is, no variable substitution)
 
 ## Response
@@ -178,6 +187,24 @@ curl -X POST https://your-domain.com/api/v1/run \
       },
       "temperature": 0.7,
       "maxOutputTokens": 500
+    }
+  }'
+```
+
+### cURL Example (With Provider Options)
+
+```bash
+curl -X POST https://your-domain.com/api/v1/run \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: your-api-key-here" \
+  -d '{
+    "agent_id": "agent-123",
+    "overrides": {
+      "providerOptions": {
+        "openai": {
+          "reasoningEffort": "high"
+        }
+      }
     }
   }'
 ```

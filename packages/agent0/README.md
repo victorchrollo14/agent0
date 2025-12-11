@@ -98,6 +98,23 @@ interface ModelOverrides {
   maxOutputTokens?: number;    // Override max output tokens
   temperature?: number;        // Override temperature
   maxStepCount?: number;       // Override max step count
+  providerOptions?: ProviderOptions; // Provider-specific reasoning options
+}
+
+interface ProviderOptions {
+  openai?: {
+    reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high';
+  };
+  xai?: {
+    reasoningEffort?: 'low' | 'medium' | 'high';
+  };
+  google?: {
+    thinkingConfig?: {
+      thinkingBudget?: number;
+      thinkingLevel?: 'low' | 'medium' | 'high';
+      includeThoughts?: boolean;
+    };
+  };
 }
 ```
 
@@ -276,6 +293,74 @@ async function runWithFallback(agentId: string, variables: Record<string, string
     });
   }
 }
+```
+
+### Provider Options
+
+The `providerOptions` option allows you to configure provider-specific reasoning and thinking behavior. Different providers have different options:
+
+**OpenAI / Azure** - Use `reasoningEffort` to control how much reasoning the model does:
+
+```typescript
+const response = await client.generate({
+  agentId: 'agent_123',
+  overrides: {
+    providerOptions: {
+      openai: {
+        reasoningEffort: 'high' // 'minimal' | 'low' | 'medium' | 'high'
+      }
+    }
+  }
+});
+```
+
+**xAI (Grok)** - Use `reasoningEffort` to control reasoning:
+
+```typescript
+const response = await client.generate({
+  agentId: 'agent_123',
+  overrides: {
+    providerOptions: {
+      xai: {
+        reasoningEffort: 'high' // 'low' | 'medium' | 'high'
+      }
+    }
+  }
+});
+```
+
+**Google Generative AI / Google Vertex** - Use `thinkingConfig` to control thinking (use either `thinkingLevel` or `thinkingBudget`, not both):
+
+```typescript
+// Using thinkingLevel (recommended for most cases)
+const response = await client.generate({
+  agentId: 'agent_123',
+  overrides: {
+    providerOptions: {
+      google: {
+        thinkingConfig: {
+          thinkingLevel: 'high',     // 'low' | 'medium' | 'high'
+          includeThoughts: true      // Include thinking in response
+        }
+      }
+    }
+  }
+});
+
+// OR using thinkingBudget (for fine-grained control)
+const response = await client.generate({
+  agentId: 'agent_123',
+  overrides: {
+    providerOptions: {
+      google: {
+        thinkingConfig: {
+          thinkingBudget: 8192,      // Number of thinking tokens
+          includeThoughts: true
+        }
+      }
+    }
+  }
+});
 ```
 
 ### Extra Messages

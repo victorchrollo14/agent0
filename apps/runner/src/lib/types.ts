@@ -1,5 +1,25 @@
 import type { ModelMessage, StepResult, ToolSet } from "ai";
 
+/**
+ * Provider-specific options for reasoning/thinking configuration.
+ * Each provider has its own format for controlling reasoning behavior.
+ */
+export type ProviderOptions = {
+	openai?: {
+		reasoningEffort?: "minimal" | "low" | "medium" | "high";
+	};
+	xai?: {
+		reasoningEffort?: "low" | "medium" | "high";
+	};
+	google?: {
+		thinkingConfig?: {
+			thinkingBudget?: number;
+			thinkingLevel?: "low" | "medium" | "high";
+			includeThoughts?: boolean;
+		};
+	};
+};
+
 export type VersionData = {
 	model: { provider_id: string; name: string };
 	messages: ModelMessage[];
@@ -8,6 +28,7 @@ export type VersionData = {
 	temperature?: number;
 	maxStepCount?: number;
 	tools?: { mcp_id: string; name: string }[];
+	providerOptions?: ProviderOptions;
 };
 
 export type RunData = {
@@ -21,6 +42,7 @@ export type RunData = {
 			maxOutputTokens?: number;
 			temperature?: number;
 			maxStepCount?: number;
+			providerOptions?: ProviderOptions;
 		};
 	};
 
