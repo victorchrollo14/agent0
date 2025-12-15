@@ -66,7 +66,7 @@ function AssistantMessagePart({
 	if (value.type === "text") {
 		return (
 			<TextareaAutosize
-				className="outline-none w-full resize-none text-sm"
+				className="outline-none w-full resize-none text-sm scrollbar-hide"
 				readOnly={isReadOnly}
 				maxRows={1000000000000}
 				placeholder="Assistant message..."
@@ -84,7 +84,7 @@ function AssistantMessagePart({
 	if (value.type === "reasoning") {
 		return (
 			<TextareaAutosize
-				className="outline-none w-full resize-none text-sm text-default-500 italic"
+				className="outline-none w-full resize-none text-sm scrollbar-hide text-default-500 italic"
 				readOnly={isReadOnly}
 				maxRows={1000000000000}
 				placeholder="Assistant reasoning..."

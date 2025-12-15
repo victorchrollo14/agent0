@@ -64,7 +64,7 @@ function UserMessagePart({
 	if (value.type === "text") {
 		return (
 			<TextareaAutosize
-				className="outline-none w-full resize-none text-sm"
+				className="outline-none w-full resize-none text-sm scrollbar-hide"
 				readOnly={isReadOnly}
 				placeholder="Enter user message..."
 				maxRows={1000000000000}

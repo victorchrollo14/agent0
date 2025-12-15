@@ -35,12 +35,12 @@ export function SystemMessage({
 			<CardHeader className="flex items-center justify-between pl-3 pr-1 h-10">
 				<span className="text-sm text-default-500">System</span>
 			</CardHeader>
-			<CardBody className="p-3 border-t border-default-200 flex flex-col gap-4">
+			<CardBody className="p-3 border-t border-default-200 gap-4">
 				<TextareaAutosize
-					className="outline-none w-full resize-none text-sm"
+					className="outline-none w-full resize-none text-sm scrollbar-hide"
 					readOnly={isReadOnly}
 					placeholder="Enter system message..."
-					maxRows={1000000000000}
+					maxRows={1000}
 					value={value}
 					onChange={(e) => onValueChange(e.target.value)}
 				/>
