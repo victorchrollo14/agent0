@@ -98,7 +98,9 @@ function RouteComponent() {
 					});
 				}}
 				shadow="none"
-				classNames={{ base: "overflow-scroll flex-1" }}
+				classNames={{
+					base: "overflow-auto flex-1 w-full",
+				}}
 				isHeaderSticky
 			>
 				<TableHeader>

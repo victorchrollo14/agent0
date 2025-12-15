@@ -105,7 +105,10 @@ function RouteComponent() {
 					});
 				}}
 				shadow="none"
-				radius="none"
+				classNames={{
+					base: "overflow-y-auto flex-1",
+				}}
+				isHeaderSticky
 				topContent={
 					<div className="w-full flex justify-between items-center">
 						<div className="flex items-center gap-2">
@@ -207,10 +210,6 @@ function RouteComponent() {
 						</div>
 					</div>
 				}
-				classNames={{
-					base: "overflow-scroll flex-1",
-				}}
-				isHeaderSticky
 			>
 				<TableHeader>
 					<TableColumn>Created At</TableColumn>
