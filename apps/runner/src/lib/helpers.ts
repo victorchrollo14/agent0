@@ -137,7 +137,7 @@ export const uploadRunData = async (id: string, data: unknown) => {
 
 	const { data: uploadData, error } = await supabase.storage
 		.from("runs-data")
-		.upload(`${id}.json`, jsonString, {
+		.upload(`${id}`, jsonString, {
 			contentType: "application/json",
 		});
 

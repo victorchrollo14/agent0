@@ -15,7 +15,6 @@ import {
 } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import type { StepResult, ToolSet } from "ai";
 import { format } from "date-fns";
 import { defaultTheme, JsonEditor } from "json-edit-react";
 import {
@@ -29,37 +28,13 @@ import {
 	Zap,
 } from "lucide-react";
 import { Messages, type MessageT } from "@/components/messages";
-import { runQuery } from "@/lib/queries";
+import { runDataQuery, runQuery } from "@/lib/queries";
 
 export const Route = createFileRoute(
 	"/_app/workspace/$workspaceId/runs/$runId",
 )({
 	component: RouteComponent,
 });
-
-// Type for the run data stored in the database
-type RunData = {
-	request?: {
-		model: { provider_id: string; name: string };
-		messages: MessageT[];
-		maxOutputTokens?: number;
-		outputFormat?: "text" | "json";
-		temperature?: number;
-		maxStepCount?: number;
-		stream: boolean;
-	};
-	steps?: StepResult<ToolSet>[];
-	error?: {
-		name: string;
-		message: string;
-		cause?: unknown;
-	};
-	metrics: {
-		preProcessingTime: number;
-		firstTokenTime: number;
-		responseTime: number;
-	};
-};
 
 function MetricCard({
 	icon: Icon,
@@ -96,9 +71,10 @@ function RouteComponent() {
 	const { workspaceId, runId } = Route.useParams();
 	const { isOpen, onOpen, onClose } = useDisclosure();
 
-	const { data: run, isLoading } = useQuery(runQuery(runId));
+	const { data: run, isLoading: isRunLoading } = useQuery(runQuery(runId));
+	const { data, isLoading } = useQuery(runDataQuery(runId));
 
-	if (isLoading) {
+	if (isRunLoading || isLoading) {
 		return (
 			<div className="h-screen flex items-center justify-center">
 				<Spinner size="lg" />
@@ -106,7 +82,7 @@ function RouteComponent() {
 		);
 	}
 
-	if (!run) {
+	if (!run || !data) {
 		return (
 			<div className="h-screen flex items-center justify-center">
 				<p className="text-default-500">Run not found</p>
@@ -114,7 +90,6 @@ function RouteComponent() {
 		);
 	}
 
-	const data = run.data as unknown as RunData;
 	const agentName = run.versions?.agents?.name || "Unknown Agent";
 
 	return (
@@ -186,30 +161,20 @@ function RouteComponent() {
 							icon={Clock}
 							label="Pre-processing"
 							value={
-								data.metrics?.preProcessingTime
-									? data.metrics.preProcessingTime / 1000
-									: 0
+								run.pre_processing_time ? run.pre_processing_time / 1000 : "-"
 							}
 							unit="s"
 						/>
 						<MetricCard
 							icon={Zap}
 							label="First Token"
-							value={
-								data.metrics?.firstTokenTime
-									? data.metrics.firstTokenTime / 1000
-									: 0
-							}
+							value={run.first_token_time ? run.first_token_time / 1000 : "-"}
 							unit="s"
 						/>
 						<MetricCard
 							icon={Layers}
 							label="Total Response"
-							value={
-								data.metrics?.responseTime
-									? data.metrics.responseTime / 1000
-									: 0
-							}
+							value={run.response_time ? run.response_time / 1000 : "-"}
 							unit="s"
 						/>
 						<MetricCard
@@ -242,7 +207,7 @@ function RouteComponent() {
 									<Chip size="sm" variant="flat">
 										{data.request?.messages?.length || 0} messages
 									</Chip>
-									{data.request?.stream && (
+									{run.is_stream && (
 										<Chip size="sm" variant="flat" color="secondary">
 											Streaming
 										</Chip>

@@ -4,6 +4,7 @@ import {
 	type DateRangeValue,
 } from "@/components/date-range-picker";
 import { supabase } from "./supabase";
+import type { RunData } from "./types";
 
 export const workspacesQuery = queryOptions({
 	queryKey: ["workspaces"],
@@ -192,19 +193,36 @@ export const runQuery = (runId: string) =>
 	queryOptions({
 		queryKey: ["run", runId],
 		queryFn: async () => {
-			const { data, error } = await supabase
+			const { data } = await supabase
 				.from("runs")
 				.select("*, versions(id, agents(id, name))")
 				.eq("id", runId)
-				.single();
-
-			if (error) throw error;
+				.single()
+				.throwOnError();
 
 			return data;
 		},
 		enabled: !!runId,
 	});
 
+export const runDataQuery = (runId: string) =>
+	queryOptions({
+		queryKey: ["run-data", runId],
+		queryFn: async () => {
+			const { data: runData, error: runDataError } = await supabase.storage
+				.from("runs-data")
+				.download(`${runId}`);
+
+			if (runDataError) throw runDataError;
+
+			// Convert blob into string and parse as JSON
+			const runDataString = await runData.text();
+			const data = JSON.parse(runDataString) as RunData;
+
+			return data;
+		},
+		enabled: !!runId,
+	});
 export const workspaceUserQuery = (workspaceId: string) =>
 	queryOptions({
 		queryKey: ["workspace-user", workspaceId],
