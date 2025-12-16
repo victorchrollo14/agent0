@@ -13,6 +13,7 @@ import {
 	createSSEStream,
 	prepareMCPServers,
 	prepareProviderAndMessages,
+	uploadRunData,
 } from "../lib/helpers.js";
 import type { RunData, RunOverrides, VersionData } from "../lib/types.js";
 
@@ -146,8 +147,9 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 
 						runData.steps = steps;
 
+						const id = nanoid();
 						await supabase.from("runs").insert({
-							id: nanoid(),
+							id,
 							workspace_id: agent.workspaces.id,
 							version_id: version.id,
 							created_at: new Date(startTime).toISOString(),
@@ -162,6 +164,7 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 								preProcessingTime -
 								startTime,
 						});
+						await uploadRunData(id, runData);
 					},
 					onError: async ({ error }) => {
 						streamCompleted = true;
@@ -183,8 +186,9 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 									: undefined,
 						};
 
+						const id = nanoid();
 						await supabase.from("runs").insert({
-							id: nanoid(),
+							id,
 							workspace_id: agent.workspaces.id,
 							version_id: version.id,
 							created_at: new Date(startTime).toISOString(),
@@ -199,8 +203,7 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 								preProcessingTime -
 								startTime,
 						});
-
-						// runData
+						await uploadRunData(id, runData);
 					},
 				});
 
@@ -239,8 +242,9 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 				const { response, text, steps } = result;
 				runData.steps = steps;
 
+				const id = nanoid();
 				await supabase.from("runs").insert({
-					id: nanoid(),
+					id,
 					workspace_id: agent.workspaces.id,
 					version_id: version.id,
 					created_at: new Date(startTime).toISOString(),
@@ -249,10 +253,9 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 					is_stream: false,
 					pre_processing_time: preProcessingTime,
 					first_token_time: Date.now() - preProcessingTime - startTime,
-					response_time: Date.now() - preProcessingTime - startTime,
+					response_time: 0,
 				});
-
-				// runData
+				await uploadRunData(id, runData);
 
 				return reply.send({
 					text,
@@ -269,8 +272,9 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 							: undefined,
 				};
 
+				const id = nanoid();
 				await supabase.from("runs").insert({
-					id: nanoid(),
+					id,
 					workspace_id: agent.workspaces.id,
 					version_id: version.id,
 					created_at: new Date(startTime).toISOString(),
@@ -279,10 +283,9 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 					is_stream: false,
 					pre_processing_time: preProcessingTime,
 					first_token_time: Date.now() - preProcessingTime - startTime,
-					response_time: Date.now() - preProcessingTime - startTime,
+					response_time: 0,
 				});
-
-				// runData
+				await uploadRunData(id, runData);
 
 				return reply.code(500).send(error);
 			}

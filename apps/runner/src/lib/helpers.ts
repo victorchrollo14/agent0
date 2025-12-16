@@ -1,12 +1,10 @@
 import { ReadableStream } from "node:stream/web";
 import { experimental_createMCPClient as createMCPClient } from "@ai-sdk/mcp";
-import type { Json } from "@repo/database";
 import type { ModelMessage, streamText } from "ai";
-import { nanoid } from "nanoid";
 import { supabase } from "./db.js";
 import { decryptMessage } from "./openpgp.js";
 import { getAIProvider } from "./providers.js";
-import type { MCPConfig, RunData, VersionData } from "./types.js";
+import type { MCPConfig, VersionData } from "./types.js";
 import { applyVariablesToMessages } from "./variables.js";
 
 // Helper to prepare provider and messages - shared logic between generate and stream
@@ -132,4 +130,20 @@ export const createSSEStream = (
 			}
 		},
 	});
+};
+
+export const uploadRunData = async (id: string, data: unknown) => {
+	const jsonString = JSON.stringify(data);
+
+	const { data: uploadData, error } = await supabase.storage
+		.from("runs-data")
+		.upload(`${id}.json`, jsonString, {
+			contentType: "application/json",
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return uploadData;
 };

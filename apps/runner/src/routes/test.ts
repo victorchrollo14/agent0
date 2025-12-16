@@ -6,6 +6,7 @@ import {
 	createSSEStream,
 	prepareMCPServers,
 	prepareProviderAndMessages,
+	uploadRunData,
 } from "../lib/helpers.js";
 import type { RunData, VersionData } from "../lib/types.js";
 
@@ -99,8 +100,9 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 
 				runData.steps = steps;
 
+				const id = nanoid();
 				await supabase.from("runs").insert({
-					id: nanoid(),
+					id,
 					workspace_id: provider.workspace_id,
 					version_id,
 					created_at: new Date(startTime).toISOString(),
@@ -112,6 +114,7 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 					response_time:
 						Date.now() - (firstTokenTime || 0) - preProcessingTime - startTime,
 				});
+				await uploadRunData(id, runData);
 			},
 			onError: async ({ error }) => {
 				closeAll();
@@ -130,8 +133,9 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 							: undefined,
 				};
 
+				const id = nanoid();
 				await supabase.from("runs").insert({
-					id: nanoid(),
+					id,
 					workspace_id: provider.workspace_id,
 					version_id,
 					created_at: new Date(startTime).toISOString(),
@@ -143,6 +147,7 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 					response_time:
 						Date.now() - (firstTokenTime || 0) - preProcessingTime - startTime,
 				});
+				await uploadRunData(id, runData);
 			},
 		});
 
