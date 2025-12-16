@@ -90,16 +90,18 @@ export default function ToolsSelector({
 			>
 				<ModalContent>
 					<ModalHeader>Tools</ModalHeader>
-					<ModalBody className="py-0">
+					<ModalBody className="py-0 space-y-8">
 						{mcps?.map((mcp) => {
-							const tools = mcp.tools as {
-								name: string;
-								description: string;
-							}[];
+							const tools = mcp?.tools as
+								| {
+										name: string;
+										description: string;
+								  }[]
+								| undefined;
 
 							return (
 								<div key={mcp.id}>
-									<div className="bg-background pb-6 z-20 sticky top-0">
+									<div className="bg-background pb-4 z-20 sticky top-0">
 										<div className="flex items-center gap-2">
 											<p className="text-lg font-medium">{mcp.name}</p>
 											<Button
@@ -117,7 +119,12 @@ export default function ToolsSelector({
 									</div>
 
 									<div className="space-y-4">
-										{tools.map((tool) => (
+										{(!tools ||
+											(Array.isArray(tools) && tools.length === 0)) && (
+											<p className="text-sm text-default-500">No tools found</p>
+										)}
+
+										{tools?.map((tool) => (
 											<div key={tool.name} className="flex gap-2">
 												<div className="flex-1">
 													<p>{tool.name}</p>

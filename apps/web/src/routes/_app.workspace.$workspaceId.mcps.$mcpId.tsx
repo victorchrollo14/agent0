@@ -55,16 +55,22 @@ function RouteComponent() {
 				}),
 			});
 
+			const id = nanoid();
+
 			const { error } = await supabase.from("mcps").insert({
-				id: nanoid(),
+				id,
 				name: values.name,
 				encrypted_data,
 				workspace_id: workspaceId,
 			});
 
 			if (error) throw error;
+
+			return {
+				id,
+			};
 		},
-		onSuccess: () => {
+		onSuccess: async ({ id }) => {
 			queryClient.invalidateQueries({ queryKey: ["mcps", workspaceId] });
 			addToast({
 				description: "MCP server created successfully.",
@@ -74,6 +80,27 @@ function RouteComponent() {
 				to: "/workspace/$workspaceId/mcps",
 				params: { workspaceId },
 			});
+
+			const {
+				data: { session },
+			} = await supabase.auth.getSession();
+
+			if (!session) {
+				return;
+			}
+
+			const baseURL = import.meta.env.DEV ? "http://localhost:2223" : "";
+
+			await fetch(`${baseURL}/api/v1/refresh-mcp`, {
+				method: "POST",
+				body: JSON.stringify({ mcp_id: id }),
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${session.access_token}`,
+				},
+			});
+
+			queryClient.invalidateQueries({ queryKey: ["mcps", workspaceId] });
 		},
 		onError: (error) => {
 			addToast({
@@ -111,16 +138,39 @@ function RouteComponent() {
 
 			if (error) throw error;
 		},
-		onSuccess: () => {
+		onSuccess: async () => {
 			queryClient.invalidateQueries({ queryKey: ["mcps", workspaceId] });
+
 			addToast({
 				description: "MCP server updated successfully.",
 				color: "success",
 			});
+
 			navigate({
 				to: "/workspace/$workspaceId/mcps",
 				params: { workspaceId },
 			});
+
+			const {
+				data: { session },
+			} = await supabase.auth.getSession();
+
+			if (!session) {
+				return;
+			}
+
+			const baseURL = import.meta.env.DEV ? "http://localhost:2223" : "";
+
+			await fetch(`${baseURL}/api/v1/refresh-mcp`, {
+				method: "POST",
+				body: JSON.stringify({ mcp_id: mcpId }),
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${session.access_token}`,
+				},
+			});
+
+			queryClient.invalidateQueries({ queryKey: ["mcps", workspaceId] });
 		},
 		onError: (error) => {
 			addToast({
