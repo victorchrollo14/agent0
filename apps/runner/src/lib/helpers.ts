@@ -133,22 +133,3 @@ export const createSSEStream = (
 		},
 	});
 };
-
-export async function insertRun(
-	workspace_id: string,
-	version_id: string,
-	data: RunData,
-	start_time: number,
-	is_error: boolean,
-	is_test: boolean,
-) {
-	await supabase.from("runs").insert({
-		id: nanoid(),
-		workspace_id,
-		version_id,
-		data: data as unknown as Json,
-		created_at: new Date(start_time).toISOString(),
-		is_error,
-		is_test,
-	});
-}

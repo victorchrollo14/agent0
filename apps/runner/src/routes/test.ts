@@ -1,9 +1,9 @@
 import { Output, stepCountIs, streamText, type ToolSet } from "ai";
 import type { FastifyInstance } from "fastify";
+import { nanoid } from "nanoid";
 import { supabase } from "../lib/db.js";
 import {
 	createSSEStream,
-	insertRun,
 	prepareMCPServers,
 	prepareProviderAndMessages,
 } from "../lib/helpers.js";
@@ -13,13 +13,7 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 	fastify.post("/api/v1/test", async (request, reply) => {
 		const startTime = Date.now();
 
-		const runData: RunData = {
-			metrics: {
-				preProcessingTime: 0,
-				firstTokenTime: 0,
-				responseTime: 0,
-			},
-		};
+		const runData: RunData = {};
 
 		// Extract and validate JWT token from Authorization header
 		const token = request.headers.authorization?.split("Bearer ")[1];
@@ -81,10 +75,10 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 		runData.request = {
 			...versionData,
 			messages: processedMessages,
-			stream: true,
 		};
 
-		runData.metrics.preProcessingTime = Date.now() - startTime;
+		const preProcessingTime = Date.now() - startTime;
+		let firstTokenTime: number | null = null;
 
 		const result = streamText({
 			model,
@@ -96,35 +90,35 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 			output: outputFormat === "json" ? Output.json() : Output.text(),
 			providerOptions,
 			onChunk: () => {
-				if (runData.metrics.firstTokenTime === 0) {
-					runData.metrics.firstTokenTime =
-						Date.now() - runData.metrics.preProcessingTime - startTime;
+				if (!firstTokenTime) {
+					firstTokenTime = Date.now() - preProcessingTime - startTime;
 				}
 			},
 			onFinish: async ({ steps }) => {
 				closeAll();
 
-				runData.metrics.responseTime =
-					Date.now() - runData.metrics.preProcessingTime - startTime;
 				runData.steps = steps;
-				await insertRun(
-					provider.workspace_id,
+
+				await supabase.from("runs").insert({
+					id: nanoid(),
+					workspace_id: provider.workspace_id,
 					version_id,
-					runData,
-					startTime,
-					false,
-					true,
-				);
+					created_at: new Date(startTime).toISOString(),
+					is_error: false,
+					is_test: true,
+					is_stream: true,
+					pre_processing_time: preProcessingTime,
+					first_token_time: firstTokenTime,
+					response_time:
+						Date.now() - (firstTokenTime || 0) - preProcessingTime - startTime,
+				});
 			},
 			onError: async ({ error }) => {
 				closeAll();
 
-				if (runData.metrics.firstTokenTime === 0) {
-					runData.metrics.firstTokenTime =
-						Date.now() - runData.metrics.preProcessingTime - startTime;
+				if (!firstTokenTime) {
+					firstTokenTime = Date.now() - preProcessingTime - startTime;
 				}
-				runData.metrics.responseTime =
-					Date.now() - runData.metrics.preProcessingTime - startTime;
 
 				runData.error = {
 					name: error instanceof Error ? error.name : "UnknownError",
@@ -135,14 +129,20 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 							? (error as Error & { cause?: unknown }).cause
 							: undefined,
 				};
-				await insertRun(
-					provider.workspace_id,
+
+				await supabase.from("runs").insert({
+					id: nanoid(),
+					workspace_id: provider.workspace_id,
 					version_id,
-					runData,
-					startTime,
-					true,
-					true,
-				);
+					created_at: new Date(startTime).toISOString(),
+					is_error: true,
+					is_test: true,
+					is_stream: true,
+					pre_processing_time: preProcessingTime,
+					first_token_time: firstTokenTime,
+					response_time:
+						Date.now() - (firstTokenTime || 0) - preProcessingTime - startTime,
+				});
 			},
 		});
 
