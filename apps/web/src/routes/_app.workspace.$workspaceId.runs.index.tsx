@@ -214,6 +214,7 @@ function RouteComponent() {
 				<TableHeader>
 					<TableColumn>Created At</TableColumn>
 					<TableColumn>Status</TableColumn>
+					<TableColumn>Total Time</TableColumn>
 					<TableColumn>Agent</TableColumn>
 					<TableColumn>ID</TableColumn>
 					<TableColumn className="w-20" hideHeader>
@@ -264,6 +265,16 @@ function RouteComponent() {
 											</Chip>
 										)}
 									</div>
+								</TableCell>
+
+								<TableCell>
+									{(item.pre_processing_time +
+										item.first_token_time +
+										item.response_time) /
+										1000}
+									<span className="font-semibold text-xs text-default-500 ml-0.5">
+										s
+									</span>
 								</TableCell>
 
 								<TableCell>{item.versions?.agents?.name || "-"}</TableCell>

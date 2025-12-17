@@ -145,7 +145,7 @@ export const runsQuery = (
 			let query = supabase
 				.from("runs")
 				.select(
-					"id, is_error, is_test, created_at, versions!inner(id, agent_id, agents(name))",
+					"id, is_error, is_test, pre_processing_time, first_token_time, response_time, created_at, versions!inner(id, agent_id, agents(name))",
 				)
 				.eq("workspace_id", workspaceId);
 
