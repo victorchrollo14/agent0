@@ -9,6 +9,7 @@ export type RunData = {
 		outputFormat?: "text" | "json";
 		temperature?: number;
 		maxStepCount?: number;
+		tools?: { mcp_id: string; name: string }[];
 	};
 	steps?: StepResult<ToolSet>[];
 	error?: {

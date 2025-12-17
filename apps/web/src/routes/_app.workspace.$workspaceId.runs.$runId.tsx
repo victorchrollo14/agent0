@@ -11,6 +11,7 @@ import {
 	ModalContent,
 	ModalHeader,
 	Spinner,
+	Tooltip,
 	useDisclosure,
 } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -20,12 +21,9 @@ import { defaultTheme, JsonEditor } from "json-edit-react";
 import {
 	AlertCircle,
 	CheckCircle2,
-	Clock,
 	Code,
-	Cpu,
 	FlaskConical,
-	Layers,
-	Zap,
+	LucideInfo,
 } from "lucide-react";
 import { Messages, type MessageT } from "@/components/messages";
 import { runDataQuery, runQuery } from "@/lib/queries";
@@ -37,31 +35,31 @@ export const Route = createFileRoute(
 });
 
 function MetricCard({
-	icon: Icon,
 	label,
 	value,
 	unit,
+	tooltipContent,
 }: {
-	icon: React.ComponentType<{ className?: string }>;
 	label: string;
 	value: number | string;
 	unit?: string;
+	tooltipContent: string;
 }) {
 	return (
-		<Card className="bg-default-50">
-			<CardBody className="flex flex-row items-center gap-3 p-3">
-				<div className="p-2 rounded-lg bg-primary/10">
-					<Icon className="size-4 text-primary" />
+		<Card className="flex-1">
+			<CardBody>
+				<div className="flex items-center gap-1 text-xs text-default-500">
+					<span>{label}</span>
+					<Tooltip content={tooltipContent}>
+						<LucideInfo className="size-3.5" />
+					</Tooltip>
 				</div>
-				<div className="flex flex-col">
-					<span className="text-xs text-default-500">{label}</span>
-					<span className="text-sm font-semibold">
-						{value}
-						{unit && (
-							<span className="text-xs text-default-400 ml-0.5">{unit}</span>
-						)}
-					</span>
-				</div>
+				<span className="text-sm font-semibold">
+					{value}
+					{unit && (
+						<span className="text-xs text-default-400 ml-0.5">{unit}</span>
+					)}
+				</span>
 			</CardBody>
 		</Card>
 	);
@@ -159,31 +157,38 @@ function RouteComponent() {
 			<div className="flex-1 overflow-y-auto p-6">
 				<div className="max-w-5xl mx-auto space-y-6">
 					{/* Metrics Row */}
-					<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+					<div className="flex flex-row items-center gap-4">
 						<MetricCard
-							icon={Clock}
 							label="Pre-processing"
+							value={run.pre_processing_time / 1000}
+							unit="s"
+							tooltipContent="Time taken to fetch data from database and tools from MCP server."
+						/>
+						<p>+</p>
+						<MetricCard
+							label="First Token"
+							value={run.first_token_time / 1000}
+							unit="s"
+							tooltipContent="Time taken to generate the first token."
+						/>
+						<p>+</p>
+						<MetricCard
+							label="Response Time"
+							value={run.response_time / 1000}
+							unit="s"
+							tooltipContent="Time taken to generate the entire response."
+						/>
+						<p>=</p>
+						<MetricCard
+							label="Total Time"
 							value={
-								run.pre_processing_time ? run.pre_processing_time / 1000 : "-"
+								(run.pre_processing_time +
+									run.first_token_time +
+									run.response_time) /
+								1000
 							}
 							unit="s"
-						/>
-						<MetricCard
-							icon={Zap}
-							label="First Token"
-							value={run.first_token_time ? run.first_token_time / 1000 : "-"}
-							unit="s"
-						/>
-						<MetricCard
-							icon={Layers}
-							label="Total Response"
-							value={run.response_time ? run.response_time / 1000 : "-"}
-							unit="s"
-						/>
-						<MetricCard
-							icon={Cpu}
-							label="Model"
-							value={runData?.request?.model?.name || "Unknown"}
+							tooltipContent="Total time taken to generate the response."
 						/>
 					</div>
 
@@ -230,7 +235,94 @@ function RouteComponent() {
 										</div>
 									}
 								>
-									<div className="p-4 pt-0">
+									<div className="p-4 pt-0 space-y-4">
+										{/* Configuration Details */}
+										<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+											{/* Model */}
+											<Card>
+												<CardBody className="p-3">
+													<span className="text-xs text-default-500 block mb-1">
+														Model
+													</span>
+													<span className="text-sm font-medium">
+														{runData.request?.model?.name || "Unknown"}
+													</span>
+													<span className="text-xs text-default-400 block">
+														{runData.request?.model?.provider_id ||
+															"Unknown Provider"}
+													</span>
+												</CardBody>
+											</Card>
+
+											{/* Parameters */}
+											<Card>
+												<CardBody className="p-3">
+													<span className="text-xs text-default-500 block mb-1">
+														Parameters
+													</span>
+													<div className="flex flex-wrap gap-1.5">
+														{runData.request?.temperature !== undefined && (
+															<Chip size="sm" variant="flat">
+																Temp: {runData.request.temperature}
+															</Chip>
+														)}
+														{runData.request?.maxOutputTokens !== undefined && (
+															<Chip size="sm" variant="flat">
+																Max Tokens: {runData.request.maxOutputTokens}
+															</Chip>
+														)}
+														{runData.request?.maxStepCount !== undefined && (
+															<Chip size="sm" variant="flat">
+																Max Steps: {runData.request.maxStepCount}
+															</Chip>
+														)}
+														{runData.request?.outputFormat && (
+															<Chip size="sm" variant="flat">
+																Output: {runData.request.outputFormat}
+															</Chip>
+														)}
+														{!runData.request?.temperature &&
+															!runData.request?.maxOutputTokens &&
+															!runData.request?.maxStepCount &&
+															!runData.request?.outputFormat && (
+																<span className="text-xs text-default-400 italic">
+																	Default
+																</span>
+															)}
+													</div>
+												</CardBody>
+											</Card>
+
+											{/* Tools */}
+											<Card>
+												<CardBody className="p-3">
+													<span className="text-xs text-default-500 block mb-1">
+														Selected Tools
+													</span>
+													<div className="flex flex-wrap gap-1.5">
+														{runData.request?.tools &&
+														runData.request.tools.length > 0 ? (
+															runData.request.tools.map((tool) => (
+																<Chip
+																	key={`${tool.mcp_id}-${tool.name}`}
+																	size="sm"
+																	variant="flat"
+																	color="secondary"
+																>
+																	{tool.name}
+																</Chip>
+															))
+														) : (
+															<span className="text-xs text-default-400 italic">
+																No tools selected
+															</span>
+														)}
+													</div>
+												</CardBody>
+											</Card>
+										</div>
+
+										{/* Messages */}
 										{runData.request?.messages &&
 										runData.request.messages.length > 0 ? (
 											<Messages

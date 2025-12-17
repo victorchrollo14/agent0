@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.1"
   }
   graphql_public: {
     Tables: {
@@ -192,40 +192,37 @@ export type Database = {
       runs: {
         Row: {
           created_at: string
-          data: Json
-          first_token_time: number | null
+          first_token_time: number
           id: string
           is_error: boolean
           is_stream: boolean | null
           is_test: boolean
-          pre_processing_time: number | null
-          response_time: number | null
+          pre_processing_time: number
+          response_time: number
           version_id: string | null
           workspace_id: string
         }
         Insert: {
           created_at?: string
-          data?: Json
-          first_token_time?: number | null
+          first_token_time: number
           id: string
           is_error?: boolean
           is_stream?: boolean | null
           is_test?: boolean
-          pre_processing_time?: number | null
-          response_time?: number | null
+          pre_processing_time: number
+          response_time: number
           version_id?: string | null
           workspace_id: string
         }
         Update: {
           created_at?: string
-          data?: Json
-          first_token_time?: number | null
+          first_token_time?: number
           id?: string
           is_error?: boolean
           is_stream?: boolean | null
           is_test?: boolean
-          pre_processing_time?: number | null
-          response_time?: number | null
+          pre_processing_time?: number
+          response_time?: number
           version_id?: string | null
           workspace_id?: string
         }

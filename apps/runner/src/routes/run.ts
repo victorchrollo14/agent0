@@ -157,7 +157,7 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 							is_test: false,
 							is_stream: true,
 							pre_processing_time: preProcessingTime,
-							first_token_time: firstTokenTime,
+							first_token_time: firstTokenTime as number,
 							response_time:
 								Date.now() -
 								(firstTokenTime || 0) -

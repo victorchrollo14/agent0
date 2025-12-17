@@ -110,7 +110,7 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 					is_test: true,
 					is_stream: true,
 					pre_processing_time: preProcessingTime,
-					first_token_time: firstTokenTime,
+					first_token_time: firstTokenTime as number,
 					response_time:
 						Date.now() - (firstTokenTime || 0) - preProcessingTime - startTime,
 				});
