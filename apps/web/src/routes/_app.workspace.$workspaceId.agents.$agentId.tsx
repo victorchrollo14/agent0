@@ -92,7 +92,9 @@ const agentFormSchema = z.object({
 				thinkingConfig: z
 					.object({
 						thinkingBudget: z.number().optional(),
-						thinkingLevel: z.enum(["low", "medium", "high"]).optional(),
+						thinkingLevel: z
+							.enum(["minimal", "low", "medium", "high"])
+							.optional(),
 						includeThoughts: z.boolean().optional(),
 					})
 					.optional(),

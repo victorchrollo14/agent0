@@ -14,7 +14,7 @@ export type ProviderOptionsValue = {
 	google?: {
 		thinkingConfig?: {
 			thinkingBudget?: number;
-			thinkingLevel?: "low" | "medium" | "high";
+			thinkingLevel?: "minimal" | "low" | "medium" | "high";
 			includeThoughts?: boolean;
 		};
 	};
@@ -162,6 +162,7 @@ export function ProviderOptions({
 								}
 								onSelectionChange={(keys) => {
 									const selected = Array.from(keys)[0] as
+										| "minimal"
 										| "low"
 										| "medium"
 										| "high"
@@ -179,6 +180,7 @@ export function ProviderOptions({
 									});
 								}}
 							>
+								<SelectItem key="minimal">Minimal</SelectItem>
 								<SelectItem key="low">Low</SelectItem>
 								<SelectItem key="medium">Medium</SelectItem>
 								<SelectItem key="high">High</SelectItem>

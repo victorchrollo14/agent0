@@ -40,13 +40,23 @@ export const PROVIDER_TYPES = [
 		key: "google-vertex",
 		icon: GoogleCloudIcon,
 		label: "Google Vertex AI",
-		models: ["gemini-3-pro-preview", "gemini-2.5-pro", "gemini-2.5-flash"],
+		models: [
+			"gemini-3-flash-preview",
+			"gemini-3-pro-preview",
+			"gemini-2.5-pro",
+			"gemini-2.5-flash",
+		],
 	},
 	{
 		key: "google",
 		icon: GeminiIcon,
 		label: "Google Generative AI",
-		models: ["gemini-3-pro-preview", "gemini-2.5-pro", "gemini-2.5-flash"],
+		models: [
+			"gemini-3-flash-preview",
+			"gemini-3-pro-preview",
+			"gemini-2.5-pro",
+			"gemini-2.5-flash",
+		],
 	},
 	{
 		key: "azure",
