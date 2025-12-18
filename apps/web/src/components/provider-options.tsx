@@ -216,7 +216,8 @@ export function ProviderOptions({
 							/>
 						</div>
 						<p className="text-xs text-default-500">
-							Use either Thinking Level or Thinking Budget (not both)
+							Use Thinking Level with 3 series and Thinking Budget with 2.5
+							series models
 						</p>
 					</div>
 					<Switch
