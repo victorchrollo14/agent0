@@ -30,6 +30,7 @@ export class Agent0 {
 			method: "POST",
 			headers,
 			body: JSON.stringify(body),
+			signal: AbortSignal.timeout(10 * 60 * 1000),
 		});
 
 		if (!response.ok) {
