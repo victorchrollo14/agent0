@@ -101,7 +101,7 @@ export default function ToolsSelector({
 
 							return (
 								<div key={mcp.id}>
-									<div className="bg-background pb-4 z-20 sticky top-0">
+									<div className="bg-content1  pb-4 z-20 sticky top-0">
 										<div className="flex items-center gap-2">
 											<p className="text-lg font-medium">{mcp.name}</p>
 											<Button

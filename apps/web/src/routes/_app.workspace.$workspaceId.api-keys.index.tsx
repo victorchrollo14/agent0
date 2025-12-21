@@ -106,7 +106,10 @@ function RouteComponent() {
 			<Table
 				aria-label="API Keys Table"
 				shadow="none"
-				classNames={{ base: "overflow-y-auto flex-1" }}
+				classNames={{
+					wrapper: "bg-background",
+					base: "overflow-y-auto flex-1",
+				}}
 				isHeaderSticky
 			>
 				<TableHeader>

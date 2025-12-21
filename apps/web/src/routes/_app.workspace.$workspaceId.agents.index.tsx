@@ -151,6 +151,7 @@ function RouteComponent() {
 				}}
 				shadow="none"
 				classNames={{
+					wrapper: "bg-background",
 					base: "overflow-auto flex-1 w-full",
 				}}
 				isHeaderSticky

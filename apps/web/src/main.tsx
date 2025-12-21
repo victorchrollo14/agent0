@@ -43,8 +43,10 @@ if (rootElement && !rootElement.innerHTML) {
 		<StrictMode>
 			<QueryClientProvider client={queryClient}>
 				<HeroUIProvider>
-					<ToastProvider />
-					<RouterProvider router={router} />
+					<main>
+						<ToastProvider />
+						<RouterProvider router={router} />
+					</main>
 				</HeroUIProvider>
 			</QueryClientProvider>
 		</StrictMode>,

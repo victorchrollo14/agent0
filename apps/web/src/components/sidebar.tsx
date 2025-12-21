@@ -1,5 +1,6 @@
 import {
 	Button,
+	Chip,
 	cn,
 	Dropdown,
 	DropdownItem,
@@ -8,6 +9,7 @@ import {
 	DropdownTrigger,
 	User,
 } from "@heroui/react";
+import { useTheme } from "@heroui/use-theme";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
@@ -16,6 +18,7 @@ import {
 	LayoutDashboard,
 	LucideChevronsUpDown,
 	LucideLogOut,
+	LucidePalette,
 	LucidePlusSquare,
 	PlayCircle,
 	Plug,
@@ -31,6 +34,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ workspaceId }: SidebarProps) {
+	const { theme, setTheme } = useTheme();
+
 	const { data: workspaces } = useQuery(workspacesQuery);
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -166,7 +171,7 @@ export function Sidebar({ workspaceId }: SidebarProps) {
 			</nav>
 
 			<div className="border-t border-default-200 p-4">
-				<Dropdown placement="right-start">
+				<Dropdown placement="top-start">
 					<DropdownTrigger className="cursor-pointer">
 						<User
 							name={user?.name || ""}
@@ -177,7 +182,29 @@ export function Sidebar({ workspaceId }: SidebarProps) {
 							}}
 						/>
 					</DropdownTrigger>
-					<DropdownMenu>
+					<DropdownMenu className="w-64">
+						<DropdownItem
+							closeOnSelect={false}
+							key="theme"
+							startContent={<LucidePalette className="size-4" />}
+							endContent={
+								<Chip size="sm" variant="bordered">
+									{theme}
+								</Chip>
+							}
+							onPress={() => {
+								// Cycle through: light → dark → system → light
+								if (theme === "light") {
+									setTheme("dark");
+								} else if (theme === "dark") {
+									setTheme("system");
+								} else {
+									setTheme("light");
+								}
+							}}
+						>
+							Switch Theme
+						</DropdownItem>
 						<DropdownItem
 							key="logout"
 							color="danger"
