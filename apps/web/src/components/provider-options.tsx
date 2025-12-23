@@ -17,6 +17,11 @@ export type ProviderOptionsValue = {
 			thinkingLevel?: "minimal" | "low" | "medium" | "high";
 			includeThoughts?: boolean;
 		};
+		mediaResolution?:
+			| "MEDIA_RESOLUTION_UNSPECIFIED"
+			| "MEDIA_RESOLUTION_LOW"
+			| "MEDIA_RESOLUTION_MEDIUM"
+			| "MEDIA_RESOLUTION_HIGH";
 	};
 };
 
@@ -227,6 +232,7 @@ export function ProviderOptions({
 							onValueChange({
 								...value,
 								google: {
+									...value?.google,
 									thinkingConfig: {
 										...value?.google?.thinkingConfig,
 										includeThoughts: checked,
@@ -237,6 +243,40 @@ export function ProviderOptions({
 					>
 						Include Thoughts
 					</Switch>
+					<Select
+						isClearable
+						variant="bordered"
+						label="Media Resolution"
+						placeholder="Not set"
+						description="Controls the resolution for processing media inputs"
+						selectedKeys={
+							value?.google?.mediaResolution
+								? [value.google.mediaResolution]
+								: []
+						}
+						onSelectionChange={(keys) => {
+							const selected = Array.from(keys)[0] as
+								| "MEDIA_RESOLUTION_UNSPECIFIED"
+								| "MEDIA_RESOLUTION_LOW"
+								| "MEDIA_RESOLUTION_MEDIUM"
+								| "MEDIA_RESOLUTION_HIGH"
+								| undefined;
+							onValueChange({
+								...value,
+								google: {
+									...value?.google,
+									mediaResolution: selected,
+								},
+							});
+						}}
+					>
+						<SelectItem key="MEDIA_RESOLUTION_UNSPECIFIED">
+							Unspecified
+						</SelectItem>
+						<SelectItem key="MEDIA_RESOLUTION_LOW">Low</SelectItem>
+						<SelectItem key="MEDIA_RESOLUTION_MEDIUM">Medium</SelectItem>
+						<SelectItem key="MEDIA_RESOLUTION_HIGH">High</SelectItem>
+					</Select>
 				</>
 			)}
 		</>
