@@ -15,9 +15,6 @@ import {
 	ModalContent,
 	ModalFooter,
 	ModalHeader,
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
 	ScrollShadow,
 	Textarea,
 	useDisclosure,
@@ -26,6 +23,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	LucidePlus,
 	LucideRefreshCcw,
+	LucideSearch,
 	LucideServer,
 	LucideWrench,
 } from "lucide-react";
@@ -106,6 +104,16 @@ export default function ToolsSection({
 		onOpen: onOpenCustomToolModal,
 		onClose: onCloseCustomToolModal,
 	} = useDisclosure();
+
+	// Modal state for MCP tool selection
+	const {
+		isOpen: isMCPToolModalOpen,
+		onOpen: onOpenMCPToolModal,
+		onClose: onCloseMCPToolModal,
+	} = useDisclosure();
+
+	// Search filter for MCP tools
+	const [mcpToolSearch, setMcpToolSearch] = useState("");
 
 	// Custom tool form state
 	const [customToolTitle, setCustomToolTitle] = useState("");
@@ -317,6 +325,7 @@ export default function ToolsSection({
 								startContent={<LucideServer className="size-4" />}
 								description="Add a tool from an MCP server"
 								isDisabled={!hasMCPs || availableMCPTools.length === 0}
+								onPress={onOpenMCPToolModal}
 							>
 								From MCP Server
 							</DropdownItem>
@@ -371,111 +380,114 @@ export default function ToolsSection({
 				</CardBody>
 			</Card>
 
-			{/* MCP Tools Popover - shown when selecting "From MCP Server" */}
-			{hasMCPs && availableMCPTools.length > 0 && (
-				<Popover placement="bottom-end">
-					<PopoverTrigger>
-						<Button
-							size="sm"
-							variant="flat"
-							className="hidden"
-							id="mcp-tools-trigger"
-						>
-							MCP Tools
-						</Button>
-					</PopoverTrigger>
-					<PopoverContent className="w-96 p-0">
-						<ScrollShadow className="max-h-80">
-							{mcps?.map((mcp) => {
-								const tools = mcp?.tools as
-									| { name: string; description: string }[]
-									| undefined;
+			{/* MCP Tools Modal */}
+			<Modal
+				isOpen={isMCPToolModalOpen}
+				onClose={() => {
+					onCloseMCPToolModal();
+					setMcpToolSearch("");
+				}}
+				size="xl"
+				scrollBehavior="inside"
+			>
+				<ModalContent>
+					<ModalHeader>Add MCP Tool</ModalHeader>
+					<ModalBody className="pb-6 pt-0">
+						<div className="sticky top-0 z-30 pb-4 bg-background">
+							<Input
+								placeholder="Search tools..."
+								value={mcpToolSearch}
+								onValueChange={setMcpToolSearch}
+								startContent={<LucideSearch className="size-4" />}
+								isClearable
+								onClear={() => setMcpToolSearch("")}
+							/>
+						</div>
+						{mcps?.map((mcp) => {
+							const tools = mcp?.tools as
+								| { name: string; description: string }[]
+								| undefined;
 
-								const availableMcpTools = tools?.filter(
-									(tool) =>
-										!value.some((item) => {
-											if (isMCPTool(item)) {
-												const mcpTool = item as {
-													mcp_id: string;
-													name: string;
-												};
-												return (
-													mcpTool.mcp_id === mcp.id &&
-													mcpTool.name === tool.name
-												);
-											}
-											return false;
-										}),
-								);
+							const availableMcpTools = tools?.filter((tool) => {
+								// Check if already selected
+								const isSelected = value.some((item) => {
+									if (isMCPTool(item)) {
+										const mcpTool = item as {
+											mcp_id: string;
+											name: string;
+										};
+										return (
+											mcpTool.mcp_id === mcp.id && mcpTool.name === tool.name
+										);
+									}
+									return false;
+								});
 
-								if (!availableMcpTools || availableMcpTools.length === 0) {
-									return null;
+								if (isSelected) return false;
+
+								// Apply search filter
+								if (mcpToolSearch.trim()) {
+									const searchLower = mcpToolSearch.toLowerCase();
+									return (
+										tool.name.toLowerCase().includes(searchLower) ||
+										tool.description?.toLowerCase().includes(searchLower) ||
+										mcp.name.toLowerCase().includes(searchLower)
+									);
 								}
 
-								return (
-									<div key={mcp.id} className="p-3 border-b border-default-100">
-										<div className="flex items-center justify-between mb-2">
-											<p className="text-sm font-medium">{mcp.name}</p>
-											<Button
-												size="sm"
-												isIconOnly
-												variant="light"
-												isLoading={refreshMcpMutation.isPending}
-												onPress={() => refreshMcpMutation.mutate(mcp.id)}
-											>
-												<LucideRefreshCcw className="size-3" />
-											</Button>
-										</div>
-										<div className="space-y-1">
-											{availableMcpTools?.map((tool) => (
-												<button
-													key={tool.name}
-													type="button"
-													className="w-full text-left px-2 py-1.5 rounded-md hover:bg-default-100 transition-colors"
-													onClick={() => handleAddMCPTool(mcp.id, tool.name)}
-												>
-													<p className="text-sm">{tool.name}</p>
-													<p className="text-xs text-default-500 line-clamp-1">
-														{tool.description}
-													</p>
-												</button>
-											))}
-										</div>
-									</div>
-								);
-							})}
-						</ScrollShadow>
-					</PopoverContent>
-				</Popover>
-			)}
+								return true;
+							});
 
-			{/* Inline MCP Tools selection - update dropdown to show MCP tools */}
-			<Dropdown placement="bottom-end">
-				<DropdownTrigger>
-					<Button
-						className="hidden"
-						id="inline-mcp-dropdown"
-						size="sm"
-						variant="flat"
-					>
-						Select
-					</Button>
-				</DropdownTrigger>
-				<DropdownMenu>
-					{availableMCPTools.map((tool) => (
-						<DropdownItem
-							key={`${tool.mcp_id}-${tool.name}`}
-							description={tool.description}
-							onPress={() => handleAddMCPTool(tool.mcp_id, tool.name)}
-						>
-							{tool.name}
-							<span className="text-xs text-default-400 ml-2">
-								{tool.mcp_name}
-							</span>
-						</DropdownItem>
-					))}
-				</DropdownMenu>
-			</Dropdown>
+							if (!availableMcpTools || availableMcpTools.length === 0) {
+								return null;
+							}
+
+							return (
+								<div key={mcp.id} className="mb-4">
+									<div className="flex items-center justify-between mb-2">
+										<p className="text-sm font-medium flex items-center gap-2">
+											<LucideServer className="size-4 text-default-500" />
+											{mcp.name}
+										</p>
+										<Button
+											size="sm"
+											isIconOnly
+											variant="light"
+											isLoading={refreshMcpMutation.isPending}
+											onPress={() => refreshMcpMutation.mutate(mcp.id)}
+										>
+											<LucideRefreshCcw className="size-3" />
+										</Button>
+									</div>
+									<div className="space-y-1">
+										{availableMcpTools?.map((tool) => (
+											<button
+												key={tool.name}
+												type="button"
+												className="w-full text-left px-3 py-2 rounded-lg hover:bg-default-100 transition-colors border border-default-200"
+												onClick={() => {
+													handleAddMCPTool(mcp.id, tool.name);
+												}}
+											>
+												<p className="text-sm font-medium">{tool.name}</p>
+												<p className="text-xs text-default-500 line-clamp-2">
+													{tool.description}
+												</p>
+											</button>
+										))}
+									</div>
+								</div>
+							);
+						})}
+						{availableMCPTools.length === 0 && (
+							<p className="text-sm text-default-400 text-center py-4">
+								No available MCP tools. All tools have been added or no MCP
+								servers are configured.
+							</p>
+						)}
+					</ModalBody>
+				</ModalContent>
+			</Modal>
 
 			{/* Custom Tool Modal */}
 			<Modal
