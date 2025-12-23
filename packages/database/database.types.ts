@@ -191,6 +191,7 @@ export type Database = {
       }
       runs: {
         Row: {
+          cost: number | null
           created_at: string
           first_token_time: number
           id: string
@@ -199,10 +200,12 @@ export type Database = {
           is_test: boolean
           pre_processing_time: number
           response_time: number
+          tokens: number | null
           version_id: string | null
           workspace_id: string
         }
         Insert: {
+          cost?: number | null
           created_at?: string
           first_token_time: number
           id: string
@@ -211,10 +214,12 @@ export type Database = {
           is_test?: boolean
           pre_processing_time: number
           response_time: number
+          tokens?: number | null
           version_id?: string | null
           workspace_id: string
         }
         Update: {
+          cost?: number | null
           created_at?: string
           first_token_time?: number
           id?: string
@@ -223,6 +228,7 @@ export type Database = {
           is_test?: boolean
           pre_processing_time?: number
           response_time?: number
+          tokens?: number | null
           version_id?: string | null
           workspace_id?: string
         }

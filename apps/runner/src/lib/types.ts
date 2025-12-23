@@ -1,7 +1,7 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import type { OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
 import type { XaiProviderOptions } from "@ai-sdk/xai";
-import type { ModelMessage, StepResult, ToolSet } from "ai";
+import type { LanguageModelUsage, ModelMessage, StepResult, ToolSet } from "ai";
 
 // /**
 //  * Provider-specific options for reasoning/thinking configuration.
@@ -45,6 +45,7 @@ export type RunData = {
 		message: string;
 		cause?: unknown;
 	};
+	totalUsage?: LanguageModelUsage;
 };
 
 export type MCPConfig = {

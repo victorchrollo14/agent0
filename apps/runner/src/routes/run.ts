@@ -8,6 +8,7 @@ import {
 } from "ai";
 import type { FastifyInstance } from "fastify";
 import { nanoid } from "nanoid";
+import { calculateModelCost } from "../lib/cost.js";
 import { supabase } from "../lib/db.js";
 import {
 	createSSEStream,
@@ -141,11 +142,12 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 						}
 					},
 
-					onFinish: async ({ steps }) => {
+					onFinish: async ({ steps, totalUsage }) => {
 						streamCompleted = true;
 						closeAll();
 
 						runData.steps = steps;
+						runData.totalUsage = totalUsage;
 
 						const id = nanoid();
 						await supabase.from("runs").insert({
@@ -163,6 +165,8 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 								(firstTokenTime || 0) -
 								preProcessingTime -
 								startTime,
+							tokens: totalUsage.totalTokens,
+							cost: calculateModelCost(model.modelId, totalUsage),
 						});
 						await uploadRunData(id, runData);
 					},
@@ -239,8 +243,9 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 					providerOptions,
 				});
 
-				const { response, text, steps } = result;
+				const { response, text, steps, totalUsage } = result;
 				runData.steps = steps;
+				runData.totalUsage = totalUsage;
 
 				const id = nanoid();
 				await supabase.from("runs").insert({
@@ -254,6 +259,8 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 					pre_processing_time: preProcessingTime,
 					first_token_time: Date.now() - preProcessingTime - startTime,
 					response_time: 0,
+					tokens: totalUsage.totalTokens,
+					cost: calculateModelCost(model.modelId, totalUsage),
 				});
 				await uploadRunData(id, runData);
 
