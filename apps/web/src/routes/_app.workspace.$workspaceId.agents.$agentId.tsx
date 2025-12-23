@@ -45,7 +45,7 @@ import { HistoryDrawer } from "@/components/history-drawer";
 import { Messages, type MessageT, messageSchema } from "@/components/messages";
 import { ModelSelector } from "@/components/model-selector";
 import { ProviderOptions } from "@/components/provider-options";
-import ToolsSelector from "@/components/tools-selector";
+import ToolsSection from "@/components/tools-section";
 import { VariablesDrawer } from "@/components/variables-drawer";
 import { copyToClipboard } from "@/lib/clipboard";
 import { agentQuery, agentVersionsQuery, providersQuery } from "@/lib/queries";
@@ -822,17 +822,6 @@ function RouteComponent() {
 									</form.Subscribe>
 								</PopoverContent>
 							</Popover>
-
-							<form.Field name="tools">
-								{(field) => (
-									<ToolsSelector
-										workspaceId={workspaceId}
-										value={field.state.value}
-										onValueChange={field.handleChange}
-										isInvalid={field.state.meta.errors.length > 0}
-									/>
-								)}
-							</form.Field>
 						</div>
 						<Button
 							size="sm"
@@ -852,6 +841,17 @@ function RouteComponent() {
 						</Button>
 					</div>
 					<div className="flex-1 overflow-y-auto p-4 space-y-4">
+						<form.Field name="tools">
+							{(field) => (
+								<ToolsSection
+									workspaceId={workspaceId}
+									value={field.state.value}
+									onValueChange={field.handleChange}
+									isInvalid={field.state.meta.errors.length > 0}
+								/>
+							)}
+						</form.Field>
+
 						<form.Field name="messages" mode="array">
 							{(field) => (
 								<Messages
