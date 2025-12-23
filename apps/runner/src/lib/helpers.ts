@@ -1,6 +1,12 @@
 import { ReadableStream } from "node:stream/web";
 import { experimental_createMCPClient as createMCPClient } from "@ai-sdk/mcp";
-import type { ModelMessage, streamText } from "ai";
+import {
+	type FlexibleSchema,
+	jsonSchema,
+	type ModelMessage,
+	type streamText,
+	type Tool,
+} from "ai";
 import { supabase } from "./db.js";
 import { decryptMessage } from "./openpgp.js";
 import { getAIProvider } from "./providers.js";
@@ -55,31 +61,45 @@ export const prepareMCPServers = async (data: VersionData) => {
 		return { tools: {}, closeAll: () => {} };
 	}
 
+	// Separate MCP tools from custom tools
+	const mcpTools = tools.filter(
+		(tool) => tool.type === "mcp" || !("type" in tool),
+	);
+	const customTools = tools.filter((tool) => tool.type === "custom");
+
+	// Collect unique MCP IDs
 	const mcp_ids: Set<string> = new Set();
-	tools.forEach((tool) => {
-		mcp_ids.add(tool.mcp_id);
+	mcpTools.forEach((tool) => {
+		// Handle both old format (without type) and new format (with type: "mcp")
+		const mcpTool = tool as { mcp_id: string; name: string };
+		if (mcpTool.mcp_id) {
+			mcp_ids.add(mcpTool.mcp_id);
+		}
 	});
-
-	const { data: mcps } = await supabase
-		.from("mcps")
-		.select("*")
-		.in("id", Array.from(mcp_ids));
-
-	if (!mcps) {
-		throw new Error("Failed to fetch MCP servers");
-	}
 
 	const servers: Record<string, { client: MCPClient; tools: Tools }> = {};
 
-	await Promise.all(
-		mcps.map(async (mcp) => {
-			const decrypted = await decryptMessage(mcp.encrypted_data as string);
-			const config: MCPConfig = JSON.parse(decrypted);
-			const mcpClient = await createMCPClient(config);
-			const tools = await mcpClient.tools();
-			servers[mcp.id] = { client: mcpClient, tools };
-		}),
-	);
+	// Only fetch MCP servers if there are MCP tools
+	if (mcp_ids.size > 0) {
+		const { data: mcps } = await supabase
+			.from("mcps")
+			.select("*")
+			.in("id", Array.from(mcp_ids));
+
+		if (!mcps) {
+			throw new Error("Failed to fetch MCP servers");
+		}
+
+		await Promise.all(
+			mcps.map(async (mcp) => {
+				const decrypted = await decryptMessage(mcp.encrypted_data as string);
+				const config: MCPConfig = JSON.parse(decrypted);
+				const mcpClient = await createMCPClient(config);
+				const tools = await mcpClient.tools();
+				servers[mcp.id] = { client: mcpClient, tools };
+			}),
+		);
+	}
 
 	const closeAll = () => {
 		Object.values(servers).forEach(({ client }) => {
@@ -87,23 +107,53 @@ export const prepareMCPServers = async (data: VersionData) => {
 		});
 	};
 
-	const selectedTools = tools.map((tool) => {
-		if (!servers[tool.mcp_id]) {
-			throw new Error(`MCP server not found for MCP ID: ${tool.mcp_id}`);
+	// Process MCP tools
+	const selectedMcpTools = mcpTools.map((tool) => {
+		const mcpTool = tool as { mcp_id: string; name: string };
+		if (!servers[mcpTool.mcp_id]) {
+			throw new Error(`MCP server not found for MCP ID: ${mcpTool.mcp_id}`);
 		}
 
-		const selectedTool = Object.entries(servers[tool.mcp_id].tools).find(
-			([name]) => name === tool.name,
+		const selectedTool = Object.entries(servers[mcpTool.mcp_id].tools).find(
+			([name]) => name === mcpTool.name,
 		);
 
 		if (!selectedTool) {
-			throw new Error(`Tool ${tool.name} not found for MCP ID: ${tool.mcp_id}`);
+			throw new Error(
+				`Tool ${mcpTool.name} not found for MCP ID: ${mcpTool.mcp_id}`,
+			);
 		}
 
 		return selectedTool;
 	});
 
-	const toolSet: Tools = Object.fromEntries(selectedTools);
+	// Process custom tools - create tool definitions without execute functions
+	const selectedCustomTools = customTools.map((tool) => {
+		const customTool = tool as {
+			type: "custom";
+			title: string;
+			description: string;
+			inputSchema?: Record<string, unknown>;
+		};
+
+		// Create a tool definition compatible with AI SDK
+		// Custom tools don't have an execute function - the model will generate tool calls
+		// but execution must be handled externally (e.g., by the caller)
+
+		console.log("REACHED", customTool);
+		const toolDefinition: Tool = {
+			title: customTool.title,
+			description: customTool.description,
+			inputSchema: jsonSchema(tool.inputSchema || {}),
+		};
+
+		return [customTool.title, toolDefinition] as const;
+	});
+
+	const toolSet: Tools = Object.fromEntries([
+		...selectedMcpTools,
+		...selectedCustomTools,
+	]);
 
 	return { tools: toolSet, closeAll };
 };
@@ -123,9 +173,7 @@ export const createSSEStream = (
 			const pingInterval = setInterval(() => {
 				try {
 					const timestamp = Date.now();
-					controller.enqueue(
-						encoder.encode(`: ping ${timestamp}\r\n\r\n`),
-					);
+					controller.enqueue(encoder.encode(`: ping ${timestamp}\r\n\r\n`));
 				} catch {
 					// Controller may be closed, ignore errors
 				}

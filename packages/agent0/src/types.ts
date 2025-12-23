@@ -41,6 +41,20 @@ export interface ModelOverrides {
 	providerOptions?: ProviderOptions;
 }
 
+/**
+ * A custom tool defined at runtime.
+ * Custom tools have title, description, and inputSchema but no execute function.
+ * The LLM will generate tool calls for these, but execution must be handled externally.
+ */
+export interface CustomTool {
+	/** Unique title for the tool (lowercase with underscores recommended) */
+	title: string;
+	/** Description of what the tool does - helps the AI understand when to use it */
+	description: string;
+	/** JSON Schema defining the parameters this tool accepts */
+	inputSchema?: Record<string, unknown>;
+}
+
 export interface RunOptions {
 	agentId: string;
 	variables?: Record<string, string>;
@@ -48,6 +62,8 @@ export interface RunOptions {
 	overrides?: ModelOverrides;
 	/** Extra messages to append to the agent's prompt (used as-is, no variable substitution) */
 	extraMessages?: ModelMessage[];
+	/** Additional custom tools to add at runtime. These are merged with any tools defined in the agent. */
+	extraTools?: CustomTool[];
 }
 
 export interface GenerateResponse {

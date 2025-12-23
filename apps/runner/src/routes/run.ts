@@ -30,12 +30,18 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 			stream = false,
 			overrides,
 			extra_messages,
+			extra_tools,
 		} = request.body as {
 			agent_id: string;
 			variables?: Record<string, string>;
 			stream?: boolean;
 			overrides?: RunOverrides;
 			extra_messages?: ModelMessage[];
+			extra_tools?: {
+				title: string;
+				description: string;
+				inputSchema?: Record<string, unknown>;
+			}[];
 		};
 
 		// Validate request body
@@ -92,6 +98,17 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 					...data.providerOptions,
 					...overrides.providerOptions,
 				};
+		}
+
+		// Merge extra_tools with existing tools
+		if (extra_tools && extra_tools.length > 0) {
+			const customTools = extra_tools.map((tool) => ({
+				type: "custom" as const,
+				title: tool.title,
+				description: tool.description,
+				inputSchema: tool.inputSchema,
+			}));
+			data.tools = [...(data.tools || []), ...customTools];
 		}
 
 		const [{ model, processedMessages }, { tools, closeAll }] =

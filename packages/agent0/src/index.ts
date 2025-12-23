@@ -49,6 +49,7 @@ export class Agent0 {
 			variables: options.variables,
 			overrides: options.overrides,
 			extra_messages: options.extraMessages,
+			extra_tools: options.extraTools,
 			stream: false,
 		});
 
@@ -63,6 +64,7 @@ export class Agent0 {
 			variables: options.variables,
 			overrides: options.overrides,
 			extra_messages: options.extraMessages,
+			extra_tools: options.extraTools,
 			stream: true,
 		});
 
@@ -134,6 +136,7 @@ export class Agent0 {
 // Re-export types for convenience
 export type {
 	Agent0Config,
+	CustomTool,
 	EmbedManyOptions,
 	EmbedManyResponse,
 	EmbedModel,

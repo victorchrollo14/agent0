@@ -88,6 +88,13 @@ interface RunOptions {
   variables?: Record<string, string>; // Variables to pass to the agent
   overrides?: ModelOverrides;         // Runtime model configuration overrides
   extraMessages?: Message[];          // Extra messages to append to the prompt
+  extraTools?: CustomTool[];          // Additional custom tools to add at runtime
+}
+
+interface CustomTool {
+  title: string;                       // Unique title for the tool (lowercase with underscores)
+  description: string;                // Description of what the tool does
+  inputSchema?: Record<string, unknown>; // JSON Schema for the tool's parameters
 }
 
 interface ModelOverrides {
@@ -590,6 +597,95 @@ const response = await client.generate({
     }
   ]
 });
+```
+
+### Custom Tools (extraTools)
+
+The `extraTools` option allows you to add custom tool definitions at runtime. These tools are merged with any tools defined in the agent configuration. Custom tools enable function calling without requiring an MCP server - the LLM will generate tool calls, but **execution must be handled externally** by your application.
+
+This is useful for:
+- **Dynamic Tool Injection**: Add context-specific tools at runtime
+- **Function Calling Patterns**: Define tools that your application will execute
+- **Hybrid Agents**: Combine MCP server tools with custom tools
+
+```typescript
+// Define custom tools for function calling
+const response = await client.generate({
+  agentId: 'agent_123',
+  extraTools: [
+    {
+      title: 'get_weather',
+      description: 'Get the current weather for a location',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          location: {
+            type: 'string',
+            description: 'City name or zip code'
+          },
+          units: {
+            type: 'string',
+            enum: ['celsius', 'fahrenheit'],
+            description: 'Temperature units'
+          }
+        },
+        required: ['location']
+      }
+    },
+    {
+      title: 'search_database',
+      description: 'Search the company database for information',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Search query' },
+          limit: { type: 'number', description: 'Max results to return' }
+        },
+        required: ['query']
+      }
+    }
+  ]
+});
+
+// The response may contain tool calls that your app needs to handle
+for (const message of response.messages) {
+  if (message.role === 'assistant') {
+    for (const part of message.content) {
+      if (part.type === 'tool-call') {
+        console.log('Tool called:', part.toolName);
+        console.log('Arguments:', part.args);
+        // Execute the tool and provide results back to the agent
+      }
+    }
+  }
+}
+```
+
+**Streaming with Custom Tools:**
+
+```typescript
+const stream = client.stream({
+  agentId: 'agent_123',
+  extraTools: [
+    {
+      title: 'lookup_user',
+      description: 'Look up user information by ID',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          userId: { type: 'string' }
+        },
+        required: ['userId']
+      }
+    }
+  ]
+});
+
+for await (const chunk of stream) {
+  if (chunk.type === 'tool-call') {
+    console.log(`Tool ${chunk.toolName} called with:`, chunk.args);
+  }
+}
 ```
 
 ### Error Handling

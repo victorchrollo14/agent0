@@ -69,10 +69,21 @@ const agentFormSchema = z.object({
 	maxStepCount: z.number(),
 	messages: z.array(messageSchema).min(1, "At least one message is required"),
 	tools: z.array(
-		z.object({
-			mcp_id: z.string(),
-			name: z.string(),
-		}),
+		z.union([
+			// MCP Tool
+			z.object({
+				type: z.literal("mcp").optional(),
+				mcp_id: z.string(),
+				name: z.string(),
+			}),
+			// Custom Tool
+			z.object({
+				type: z.literal("custom"),
+				title: z.string(),
+				description: z.string(),
+				inputSchema: z.record(z.string(), z.unknown()).optional(),
+			}),
+		]),
 	),
 	providerOptions: z.object({
 		openai: z
@@ -322,7 +333,7 @@ function RouteComponent() {
 					content: "",
 				},
 			] as MessageT[],
-			tools: [] as { mcp_id: string; name: string }[],
+			tools: [] as z.infer<typeof agentFormSchema>["tools"],
 			providerOptions: {} as z.infer<typeof agentFormSchema>["providerOptions"],
 		},
 		validators: {
@@ -355,7 +366,7 @@ function RouteComponent() {
 			temperature?: number;
 			maxStepCount?: number;
 			messages?: MessageT[];
-			tools?: { mcp_id: string; name: string }[];
+			tools?: z.infer<typeof agentFormSchema>["tools"];
 			providerOptions?: z.infer<typeof agentFormSchema>["providerOptions"];
 		};
 

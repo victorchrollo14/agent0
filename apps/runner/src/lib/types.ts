@@ -13,6 +13,32 @@ export type ProviderOptions = {
 	google?: GoogleGenerativeAIProviderOptions;
 };
 
+/**
+ * A tool from an MCP server.
+ */
+export type MCPTool = {
+	type: "mcp";
+	mcp_id: string;
+	name: string;
+};
+
+/**
+ * A custom tool defined by the developer.
+ * Custom tools have title, description, and inputSchema but no execute function.
+ * The LLM will generate tool calls for these, but execution must be handled externally.
+ */
+export type CustomTool = {
+	type: "custom";
+	title: string;
+	description: string;
+	inputSchema?: Record<string, unknown>;
+};
+
+/**
+ * A tool can either be from an MCP server or a custom tool.
+ */
+export type ToolDefinition = MCPTool | CustomTool;
+
 export type VersionData = {
 	model: { provider_id: string; name: string };
 	messages: ModelMessage[];
@@ -20,7 +46,7 @@ export type VersionData = {
 	outputFormat?: "text" | "json";
 	temperature?: number;
 	maxStepCount?: number;
-	tools?: { mcp_id: string; name: string }[];
+	tools?: ToolDefinition[];
 	providerOptions?: ProviderOptions;
 };
 
