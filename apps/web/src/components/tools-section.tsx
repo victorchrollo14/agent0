@@ -15,7 +15,6 @@ import {
 	ModalContent,
 	ModalFooter,
 	ModalHeader,
-	ScrollShadow,
 	Textarea,
 	useDisclosure,
 } from "@heroui/react";
@@ -28,7 +27,6 @@ import {
 	LucideWrench,
 } from "lucide-react";
 import { useState } from "react";
-import { ThemedJsonEditor } from "@/components/themed-json-editor";
 import { mcpsQuery } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 
@@ -118,9 +116,8 @@ export default function ToolsSection({
 	// Custom tool form state
 	const [customToolTitle, setCustomToolTitle] = useState("");
 	const [customToolDescription, setCustomToolDescription] = useState("");
-	const [customToolInputSchema, setCustomToolInputSchema] = useState<
-		Record<string, unknown>
-	>({});
+	const [customToolInputSchema, setCustomToolInputSchema] = useState("");
+	const [inputSchemaError, setInputSchemaError] = useState<string | null>(null);
 
 	const { data: mcps } = useQuery(mcpsQuery(workspaceId));
 
@@ -223,6 +220,30 @@ export default function ToolsSection({
 			return;
 		}
 
+		// Parse and validate input schema if provided
+		let parsedInputSchema: Record<string, unknown> | undefined;
+		if (customToolInputSchema.trim()) {
+			try {
+				parsedInputSchema = JSON.parse(customToolInputSchema.trim());
+				if (
+					typeof parsedInputSchema !== "object" ||
+					parsedInputSchema === null
+				) {
+					addToast({
+						title: "Input schema must be a valid JSON object.",
+						color: "danger",
+					});
+					return;
+				}
+			} catch {
+				addToast({
+					title: "Invalid JSON in input schema.",
+					color: "danger",
+				});
+				return;
+			}
+		}
+
 		// Check if a custom tool with this title already exists
 		const isAlreadyAdded = value.some((item) => {
 			if (isCustomTool(item)) {
@@ -243,10 +264,7 @@ export default function ToolsSection({
 			type: "custom",
 			title: customToolTitle.trim(),
 			description: customToolDescription.trim(),
-			inputSchema:
-				Object.keys(customToolInputSchema).length > 0
-					? customToolInputSchema
-					: undefined,
+			inputSchema: parsedInputSchema,
 		};
 
 		onValueChange([...value, newTool]);
@@ -254,7 +272,8 @@ export default function ToolsSection({
 		// Reset form and close modal
 		setCustomToolTitle("");
 		setCustomToolDescription("");
-		setCustomToolInputSchema({});
+		setCustomToolInputSchema("");
+		setInputSchemaError(null);
 		onCloseCustomToolModal();
 	};
 
@@ -514,28 +533,32 @@ export default function ToolsSection({
 							description="A clear description helps the AI understand when to use this tool"
 							isRequired
 						/>
-						<div className="space-y-2">
-							<label
-								htmlFor="input-schema"
-								className="text-sm font-medium text-default-700"
-							>
-								Input Schema (JSON Schema)
-							</label>
-							<p className="text-xs text-default-500">
-								Define the parameters this tool accepts using JSON Schema
-								format. Leave empty for no parameters.
-							</p>
-							<ThemedJsonEditor
-								data={customToolInputSchema}
-								setData={(newData) => {
-									if (newData && typeof newData === "object") {
-										setCustomToolInputSchema(
-											newData as Record<string, unknown>,
-										);
+						<Textarea
+							label="Input Schema (JSON)"
+							placeholder='{"type": "object", "properties": {...}}'
+							value={customToolInputSchema}
+							onValueChange={(val) => {
+								setCustomToolInputSchema(val);
+								// Validate JSON on change
+								if (val.trim()) {
+									try {
+										JSON.parse(val);
+										setInputSchemaError(null);
+									} catch {
+										setInputSchemaError("Invalid JSON format");
 									}
-								}}
-							/>
-						</div>
+								} else {
+									setInputSchemaError(null);
+								}
+							}}
+							description="Define the parameters this tool accepts using JSON Schema format. Leave empty for no parameters."
+							isInvalid={!!inputSchemaError}
+							errorMessage={inputSchemaError}
+							minRows={4}
+							classNames={{
+								input: "font-mono text-sm",
+							}}
+						/>
 					</ModalBody>
 					<ModalFooter>
 						<Button variant="flat" onPress={onCloseCustomToolModal}>
