@@ -289,7 +289,7 @@ function RouteComponent() {
 								</TableCell>
 								<TableCell>
 									{item.cost
-										? `$${item.cost} (${formatTokens(item.tokens ?? 0)} tokens)`
+										? `$${item.cost.toFixed(5)} (${formatTokens(item.tokens ?? 0)} tokens)`
 										: "-"}
 								</TableCell>
 
