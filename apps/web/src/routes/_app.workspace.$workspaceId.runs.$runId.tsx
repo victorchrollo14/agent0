@@ -15,7 +15,7 @@ import {
 	useDisclosure,
 } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import {
 	AlertCircle,
@@ -23,10 +23,12 @@ import {
 	Code,
 	FlaskConical,
 	LucideInfo,
+	RotateCcw,
 } from "lucide-react";
 import { Messages, type MessageT } from "@/components/messages";
 import { ThemedJsonEditor } from "@/components/themed-json-editor";
 import { runDataQuery, runQuery } from "@/lib/queries";
+import type { AgentFormValues } from "./_app.workspace.$workspaceId.agents.$agentId";
 
 export const Route = createFileRoute(
 	"/_app/workspace/$workspaceId/runs/$runId",
@@ -68,12 +70,26 @@ function MetricCard({
 function RouteComponent() {
 	const { workspaceId, runId } = Route.useParams();
 	const { isOpen, onOpen, onClose } = useDisclosure();
+	const navigate = useNavigate();
 
 	const { data: run, isLoading: isRunLoading } = useQuery(runQuery(runId));
 	const { data: runData, isLoading: isRunDataLoading } = useQuery({
 		...runDataQuery(runId),
 		retry: 0,
 	});
+
+	const handleReplay = () => {
+		if (!runData?.request) return;
+
+		// Navigate to the new agent page with replay data in router state
+		navigate({
+			to: "/workspace/$workspaceId/agents/$agentId",
+			params: { workspaceId, agentId: "new" },
+			state: {
+				replayData: runData.request as AgentFormValues,
+			} as Record<string, unknown>,
+		});
+	};
 
 	if (isRunLoading) {
 		return (
@@ -144,14 +160,25 @@ function RouteComponent() {
 					</div>
 				</div>
 
-				<Button
-					variant="flat"
-					size="sm"
-					startContent={<Code className="size-4" />}
-					onPress={onOpen}
-				>
-					View Raw
-				</Button>
+				<div className="flex items-center gap-2">
+					<Button
+						variant="flat"
+						size="sm"
+						startContent={<RotateCcw className="size-4" />}
+						onPress={handleReplay}
+						isDisabled={!runData?.request}
+					>
+						Replay
+					</Button>
+					<Button
+						variant="flat"
+						size="sm"
+						startContent={<Code className="size-4" />}
+						onPress={onOpen}
+					>
+						View Raw
+					</Button>
+				</div>
 			</div>
 
 			<div className="flex-1 overflow-y-auto p-6">

@@ -10,6 +10,7 @@ export type RunData = {
 		temperature?: number;
 		maxStepCount?: number;
 		tools?: { mcp_id: string; name: string }[];
+		providerOptions?: Record<string, unknown>;
 	};
 	steps?: StepResult<ToolSet>[];
 	error?: {

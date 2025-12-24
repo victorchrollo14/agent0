@@ -20,7 +20,11 @@ import {
 import type { Json, Tables } from "@repo/database";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	useLocation,
+	useNavigate,
+} from "@tanstack/react-router";
 import type { TextStreamPart, Tool } from "ai";
 import { events } from "fetch-event-stream";
 import {
@@ -114,9 +118,12 @@ const agentFormSchema = z.object({
 	}),
 });
 
+export type AgentFormValues = z.infer<typeof agentFormSchema>;
+
 function RouteComponent() {
 	const { workspaceId, agentId } = Route.useParams();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const queryClient = useQueryClient();
 	const isNewAgent = agentId === "new";
 	const [generatedMessages, setGeneratedMessages] = useState<MessageT[]>([]);
@@ -386,6 +393,21 @@ function RouteComponent() {
 			);
 		}, 200);
 	}, [version, form]);
+
+	// Check for replay data from router state when creating a new agent
+	useEffect(() => {
+		if (!isNewAgent) return;
+
+		const state = location.state as {
+			replayData?: AgentFormValues;
+		} | null;
+
+		if (!state?.replayData) return;
+
+		setTimeout(() => {
+			form.reset(state.replayData, { keepDefaultValues: true });
+		}, 200);
+	}, [isNewAgent, location.state, form]);
 
 	const handleAddToConversation = useCallback(() => {
 		const newMessages = form.getFieldValue("messages").slice();
