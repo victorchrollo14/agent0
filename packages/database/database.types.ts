@@ -272,6 +272,7 @@ export type Database = {
           agent_id: string
           created_at: string
           data: Json
+          environment: Database["public"]["Enums"]["version_environment"] | null
           id: string
           is_deployed: boolean
           user_id: string
@@ -280,6 +281,9 @@ export type Database = {
           agent_id: string
           created_at?: string
           data: Json
+          environment?:
+            | Database["public"]["Enums"]["version_environment"]
+            | null
           id: string
           is_deployed?: boolean
           user_id?: string
@@ -288,6 +292,9 @@ export type Database = {
           agent_id?: string
           created_at?: string
           data?: Json
+          environment?:
+            | Database["public"]["Enums"]["version_environment"]
+            | null
           id?: string
           is_deployed?: boolean
           user_id?: string
@@ -400,6 +407,7 @@ export type Database = {
       }
     }
     Enums: {
+      version_environment: "staging" | "production"
       workspace_user_role: "admin" | "writer" | "reader"
     }
     CompositeTypes: {
@@ -531,6 +539,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      version_environment: ["staging", "production"],
       workspace_user_role: ["admin", "writer", "reader"],
     },
   },
