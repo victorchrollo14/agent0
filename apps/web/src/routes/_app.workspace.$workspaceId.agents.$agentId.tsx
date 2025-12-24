@@ -730,6 +730,7 @@ function RouteComponent() {
 													</Button>
 												</DropdownTrigger>
 												<DropdownMenu
+													variant="flat"
 													aria-label="Deploy options"
 													disabledKeys={[
 														...(isDeployedToStaging ? ["staging"] : []),
@@ -741,6 +742,7 @@ function RouteComponent() {
 												>
 													<DropdownItem
 														key="staging"
+														color="warning"
 														description={
 															isDeployedToStaging
 																? "This version is already in staging"
@@ -759,6 +761,7 @@ function RouteComponent() {
 													</DropdownItem>
 													<DropdownItem
 														key="production"
+														color="success"
 														description={
 															isDeployedToProduction
 																? "This version is already in production"
@@ -777,6 +780,7 @@ function RouteComponent() {
 													</DropdownItem>
 													<DropdownItem
 														key="both"
+														color="primary"
 														description={
 															isDeployedToStaging && isDeployedToProduction
 																? "This version is already deployed to both"
