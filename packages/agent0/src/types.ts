@@ -6,6 +6,8 @@ import type { embed, embedMany, ModelMessage } from "ai";
 export interface Agent0Config {
 	apiKey: string;
 	baseUrl?: string;
+	/** Default environment to use for all runs. Can be overridden per-run. Defaults to 'production'. */
+	environment?: Environment;
 }
 
 /**

@@ -5,6 +5,7 @@ import type {
 	EmbedManyResponse,
 	EmbedOptions,
 	EmbedResponse,
+	Environment,
 	GenerateResponse,
 	RunOptions,
 } from "./types";
@@ -12,10 +13,19 @@ import type {
 export class Agent0 {
 	private apiKey: string;
 	private baseUrl: string;
+	private environment?: Environment;
 
 	constructor(config: Agent0Config) {
 		this.apiKey = config.apiKey;
 		this.baseUrl = config.baseUrl || "https://app.agent0.com"; // Default URL, can be overridden
+		this.environment = config.environment;
+	}
+
+	/**
+	 * Resolve the environment to use: run-level > constructor-level > default 'production'
+	 */
+	private resolveEnvironment(runEnvironment?: Environment): Environment {
+		return runEnvironment ?? this.environment ?? "production";
 	}
 
 	private async fetchApi(endpoint: string, body: unknown): Promise<Response> {
@@ -46,7 +56,7 @@ export class Agent0 {
 	async generate(options: RunOptions): Promise<GenerateResponse> {
 		const response = await this.fetchApi("/api/v1/run", {
 			agent_id: options.agentId,
-			environment: options.environment,
+			environment: this.resolveEnvironment(options.environment),
 			variables: options.variables,
 			overrides: options.overrides,
 			extra_messages: options.extraMessages,
@@ -62,7 +72,7 @@ export class Agent0 {
 	): AsyncGenerator<TextStreamPart<ToolSet>, void, unknown> {
 		const response = await this.fetchApi("/api/v1/run", {
 			agent_id: options.agentId,
-			environment: options.environment,
+			environment: this.resolveEnvironment(options.environment),
 			variables: options.variables,
 			overrides: options.overrides,
 			extra_messages: options.extraMessages,

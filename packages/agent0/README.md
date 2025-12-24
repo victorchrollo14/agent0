@@ -73,6 +73,7 @@ const client = new Agent0({
 |--------|------|----------|---------|-------------|
 | `apiKey` | `string` | Yes | - | Your Agent0 API key |
 | `baseUrl` | `string` | No | `https://app.agent0.com` | The base URL for the Agent0 API |
+| `environment` | `'staging' \| 'production'` | No | `'production'` | Default environment for all runs (can be overridden per-run) |
 
 ## Methods
 
@@ -459,26 +460,48 @@ const response = await client.generate({
 
 Agent0 supports deploying different versions of your agent to staging and production environments. This allows you to test changes before rolling them out to production.
 
+The environment can be set at two levels with the following priority:
+1. **Run-level** (highest priority): Set `environment` in `generate()` or `stream()` options
+2. **Constructor-level**: Set `environment` when creating the `Agent0` client
+3. **Default**: Falls back to `'production'`
+
 ```typescript
-// Run the staging version (for testing)
-const stagingResponse = await client.generate({
+// Set default environment at constructor level
+const stagingClient = new Agent0({
+  apiKey: process.env.AGENT0_API_KEY!,
+  environment: 'staging' // All runs will use staging by default
+});
+
+// This uses 'staging' from constructor
+const response1 = await stagingClient.generate({
+  agentId: 'agent_123',
+  variables: { name: 'Test User' }
+});
+
+// Override constructor setting at run level
+const response2 = await stagingClient.generate({
+  agentId: 'agent_123',
+  environment: 'production', // Overrides the constructor's 'staging'
+  variables: { name: 'Real User' }
+});
+
+// Default client (no constructor environment) uses 'production'
+const defaultClient = new Agent0({
+  apiKey: process.env.AGENT0_API_KEY!
+});
+
+// This uses 'production' (the default)
+const response3 = await defaultClient.generate({
+  agentId: 'agent_123',
+  variables: { name: 'User' }
+});
+
+// Run-level environment takes precedence
+const response4 = await defaultClient.generate({
   agentId: 'agent_123',
   environment: 'staging',
   variables: { name: 'Test User' }
 });
-
-// Run the production version (default behavior)
-const productionResponse = await client.generate({
-  agentId: 'agent_123',
-  environment: 'production', // This is the default
-  variables: { name: 'Real User' }
-});
-
-// If environment is omitted, 'production' is used for backward compatibility
-const response = await client.generate({
-  agentId: 'agent_123',
-  variables: { name: 'User' }
-}); // Uses production environment
 ```
 
 ### Model Overrides
