@@ -218,7 +218,7 @@ export const runQuery = (runId: string) =>
 		queryFn: async () => {
 			const { data } = await supabase
 				.from("runs")
-				.select("*, versions(id, agents(id, name))")
+				.select("*, versions(id, agents:agent_id(id, name))")
 				.eq("id", runId)
 				.single()
 				.throwOnError();
