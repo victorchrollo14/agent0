@@ -42,7 +42,7 @@ if (rootElement && !rootElement.innerHTML) {
 	root.render(
 		<StrictMode>
 			<QueryClientProvider client={queryClient}>
-				<HeroUIProvider>
+				<HeroUIProvider navigate={(path) => router.navigate({ to: path })}>
 					<main>
 						<ToastProvider />
 						<RouterProvider router={router} />
