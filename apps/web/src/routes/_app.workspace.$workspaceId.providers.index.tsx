@@ -97,13 +97,6 @@ function RouteComponent() {
 
 			<Table
 				aria-label="Providers Table"
-				onRowAction={(key) => {
-					if (!key || user?.role !== "admin") return;
-
-					navigate({
-						to: key.toString(),
-					});
-				}}
 				shadow="none"
 				classNames={{
 					wrapper: "bg-background",
@@ -129,7 +122,15 @@ function RouteComponent() {
 						const provider = PROVIDER_TYPES.find((p) => p.key === item.type);
 
 						return (
-							<TableRow key={item.id} className="hover:bg-default-100">
+							<TableRow
+								key={item.id}
+								className="hover:bg-default-100"
+								href={
+									user?.role === "admin"
+										? `/workspace/${workspaceId}/providers/${item.id}`
+										: undefined
+								}
+							>
 								<TableCell>{item.name}</TableCell>
 								<TableCell>
 									<div className="flex items-center gap-2">

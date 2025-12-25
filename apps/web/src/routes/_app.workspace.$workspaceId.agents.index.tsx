@@ -140,15 +140,6 @@ function RouteComponent() {
 
 			<Table
 				aria-label="Agents Table"
-				onRowAction={(key) => {
-					if (!key) return;
-					navigate({
-						to: "$agentId",
-						params: {
-							agentId: key.toString(),
-						},
-					});
-				}}
 				shadow="none"
 				classNames={{
 					wrapper: "bg-background",
@@ -225,7 +216,11 @@ function RouteComponent() {
 					emptyContent="You haven't created any agents yet."
 				>
 					{(item) => (
-						<TableRow key={item.id} className="hover:bg-default-100">
+						<TableRow
+							key={item.id}
+							className="hover:bg-default-100"
+							href={`/workspace/${workspaceId}/agents/${item.id}`}
+						>
 							<TableCell>{item.name}</TableCell>
 							<TableCell>
 								<IDCopy id={item.id} />

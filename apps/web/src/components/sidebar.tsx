@@ -11,7 +11,7 @@ import {
 } from "@heroui/react";
 import { useTheme } from "@heroui/use-theme";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
 	Bot,
 	KeySquare,
@@ -162,7 +162,8 @@ export function Sidebar({ workspaceId }: SidebarProps) {
 								item.active && "bg-default-100",
 							)}
 							startContent={<Icon className="size-5" />}
-							onPress={() => navigate({ to: item.path })}
+							as={Link}
+							to={item.path}
 						>
 							{item.label}
 						</Button>

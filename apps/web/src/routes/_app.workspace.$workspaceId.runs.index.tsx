@@ -104,15 +104,6 @@ function RouteComponent() {
 
 			<Table
 				aria-label="Runs Table"
-				onRowAction={(key) => {
-					if (!key) return;
-					navigate({
-						to: `$runId`,
-						params: {
-							runId: key.toString(),
-						},
-					});
-				}}
 				shadow="none"
 				classNames={{
 					wrapper: "bg-background",
@@ -240,7 +231,11 @@ function RouteComponent() {
 				>
 					{(item) => {
 						return (
-							<TableRow key={item.id} className="hover:bg-default-100">
+							<TableRow
+								key={item.id}
+								className="hover:bg-default-100"
+								href={`/workspace/${workspaceId}/runs/${item.id}`}
+							>
 								<TableCell>
 									{format(item.created_at, "d LLL, hh:mm a")}
 								</TableCell>

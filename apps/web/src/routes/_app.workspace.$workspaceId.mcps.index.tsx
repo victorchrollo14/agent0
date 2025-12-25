@@ -134,13 +134,6 @@ function RouteComponent() {
 
 			<Table
 				aria-label="MCP Servers Table"
-				onRowAction={(key) => {
-					if (!key || user?.role !== "admin") return;
-
-					navigate({
-						to: key.toString(),
-					});
-				}}
 				shadow="none"
 				classNames={{
 					wrapper: "bg-background",
@@ -163,7 +156,15 @@ function RouteComponent() {
 				>
 					{(item) => {
 						return (
-							<TableRow key={item.id} className="hover:bg-default-100">
+							<TableRow
+								key={item.id}
+								className="hover:bg-default-100"
+								href={
+									user?.role === "admin"
+										? `/workspace/${workspaceId}/mcps/${item.id}`
+										: undefined
+								}
+							>
 								<TableCell>{item.name}</TableCell>
 								<TableCell>
 									<IDCopy id={item.id} />
