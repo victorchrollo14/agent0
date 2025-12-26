@@ -1,4 +1,4 @@
-import type { StepResult, ToolSet } from "ai";
+import type { LanguageModelUsage, StepResult, ToolSet } from "ai";
 import type { MessageT } from "@/components/messages";
 
 /**
@@ -32,6 +32,7 @@ export type RunData = {
 		providerOptions?: Record<string, unknown>;
 	};
 	steps?: StepResult<ToolSet>[];
+	totalUsage?: LanguageModelUsage;
 	error?: {
 		name: string;
 		message: string;

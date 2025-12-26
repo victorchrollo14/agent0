@@ -186,6 +186,17 @@ function RouteComponent() {
 					{/* Metrics Row */}
 					<div className="flex flex-row items-center gap-4">
 						<MetricCard
+							label="Cost"
+							value={`$${(run.cost || 0).toFixed(6)}`}
+							tooltipContent="Total cost of the run."
+						/>
+						<MetricCard
+							label="Total Tokens"
+							value={run.tokens || 0}
+							tooltipContent="Total tokens used in the run."
+						/>
+						<div className="w-px h-12 bg-default-200" />
+						<MetricCard
 							label="Pre-processing"
 							value={run.pre_processing_time / 1000}
 							unit="s"
@@ -409,6 +420,102 @@ function RouteComponent() {
 										) : (
 											<p className="text-default-400 text-sm italic px-4">
 												No response steps available
+											</p>
+										)}
+									</div>
+								</AccordionItem>
+
+								<AccordionItem
+									key="usage"
+									aria-label="Token Usage"
+									title={
+										<div className="flex items-center gap-2">
+											<span className="font-medium">Token Usage</span>
+											{runData.totalUsage && (
+												<Chip size="sm" variant="flat">
+													{runData.totalUsage.totalTokens} tokens
+												</Chip>
+											)}
+										</div>
+									}
+								>
+									<div className="p-4 pt-0">
+										{runData.totalUsage ? (
+											<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+												{/* Input Tokens */}
+												<Card>
+													<CardBody className="p-3 space-y-2">
+														<div className="flex justify-between items-center">
+															<span className="text-sm font-medium">
+																Input Tokens
+															</span>
+															<span className="text-sm font-bold">
+																{runData.totalUsage.inputTokens}
+															</span>
+														</div>
+														{runData.totalUsage.inputTokenDetails && (
+															<div className="space-y-1 pl-2 border-l-2 border-default-200">
+																<div className="flex justify-between text-xs text-default-500">
+																	<span>Non-cached</span>
+																	<span>
+																		{runData.totalUsage.inputTokenDetails
+																			.noCacheTokens ?? "-"}
+																	</span>
+																</div>
+																<div className="flex justify-between text-xs text-default-500">
+																	<span>Cached Read</span>
+																	<span>
+																		{runData.totalUsage.inputTokenDetails
+																			.cacheReadTokens ?? "-"}
+																	</span>
+																</div>
+																<div className="flex justify-between text-xs text-default-500">
+																	<span>Cached Write</span>
+																	<span>
+																		{runData.totalUsage.inputTokenDetails
+																			.cacheWriteTokens ?? "-"}
+																	</span>
+																</div>
+															</div>
+														)}
+													</CardBody>
+												</Card>
+
+												{/* Output Tokens */}
+												<Card>
+													<CardBody className="p-3 space-y-2">
+														<div className="flex justify-between items-center">
+															<span className="text-sm font-medium">
+																Output Tokens
+															</span>
+															<span className="text-sm font-bold">
+																{runData.totalUsage.outputTokens}
+															</span>
+														</div>
+														{runData.totalUsage.outputTokenDetails && (
+															<div className="space-y-1 pl-2 border-l-2 border-default-200">
+																<div className="flex justify-between text-xs text-default-500">
+																	<span>Text</span>
+																	<span>
+																		{runData.totalUsage.outputTokenDetails
+																			.textTokens ?? "-"}
+																	</span>
+																</div>
+																<div className="flex justify-between text-xs text-default-500">
+																	<span>Reasoning</span>
+																	<span>
+																		{runData.totalUsage.outputTokenDetails
+																			.reasoningTokens ?? "-"}
+																	</span>
+																</div>
+															</div>
+														)}
+													</CardBody>
+												</Card>
+											</div>
+										) : (
+											<p className="text-default-400 text-sm italic">
+												No token usage data available
 											</p>
 										)}
 									</div>
