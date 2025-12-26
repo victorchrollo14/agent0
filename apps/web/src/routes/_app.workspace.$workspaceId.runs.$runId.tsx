@@ -254,7 +254,7 @@ function RouteComponent() {
 							{/* Request & Response Sections */}
 							<Accordion
 								selectionMode="multiple"
-								defaultExpandedKeys={["response"]}
+								defaultExpandedKeys={["response", "usage"]}
 							>
 								<AccordionItem
 									key="request"
