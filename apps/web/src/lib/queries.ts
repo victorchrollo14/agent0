@@ -68,14 +68,88 @@ export const agentsLiteQuery = (workspaceId: string) =>
 		},
 	});
 
-export const agentsQuery = (workspaceId: string, page = 1, search?: string) =>
+export const tagsQuery = (workspaceId: string) =>
 	queryOptions({
-		queryKey: ["agents", workspaceId, page, search],
+		queryKey: ["tags", workspaceId],
 		queryFn: async () => {
+			const { data, error } = await supabase
+				.from("tags")
+				.select("*")
+				.eq("workspace_id", workspaceId)
+				.order("name", { ascending: true });
+
+			if (error) throw error;
+
+			return data;
+		},
+		enabled: !!workspaceId,
+	});
+
+export const agentTagsQuery = (agentId: string) =>
+	queryOptions({
+		queryKey: ["agent-tags", agentId],
+		queryFn: async () => {
+			const { data, error } = await supabase
+				.from("agent_tags")
+				.select("*, tags(*)")
+				.eq("agent_id", agentId);
+
+			if (error) throw error;
+
+			return data;
+		},
+		enabled: !!agentId && agentId !== "new",
+	});
+
+export const agentsQuery = (
+	workspaceId: string,
+	page = 1,
+	search?: string,
+	tagIds?: string[],
+) =>
+	queryOptions({
+		queryKey: ["agents", workspaceId, page, search, tagIds],
+		queryFn: async () => {
+			// First, get agent IDs that match the tag filter (if provided)
+			let matchingAgentIds: string[] | null = null;
+
+			if (tagIds && tagIds.length > 0) {
+				const { data: agentTags, error: tagError } = await supabase
+					.from("agent_tags")
+					.select("agent_id")
+					.in("tag_id", tagIds);
+
+				if (tagError) throw tagError;
+
+				// Get unique agent IDs that have ALL selected tags
+				const agentIdCounts = agentTags.reduce(
+					(acc, { agent_id }) => {
+						acc[agent_id] = (acc[agent_id] || 0) + 1;
+						return acc;
+					},
+					{} as Record<string, number>,
+				);
+
+				// Only include agents that have all selected tags
+				matchingAgentIds = Object.entries(agentIdCounts)
+					.filter(([_, count]) => count >= tagIds.length)
+					.map(([id]) => id);
+
+				// If no agents match the tags, return empty array
+				if (matchingAgentIds.length === 0) {
+					return [];
+				}
+			}
+
 			let query = supabase
 				.from("agents")
-				.select("*")
+				.select("*, agent_tags(*, tags(*))")
 				.eq("workspace_id", workspaceId);
+
+			// Apply agent ID filter if we have matching agents from tags
+			if (matchingAgentIds) {
+				query = query.in("id", matchingAgentIds);
+			}
 
 			// Apply search filter if provided
 			if (search) {

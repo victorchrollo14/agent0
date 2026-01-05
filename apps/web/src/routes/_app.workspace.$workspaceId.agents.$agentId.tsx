@@ -46,11 +46,17 @@ import type { assistantMessageSchema } from "@/components/assistant-message";
 import { Messages, type MessageT, messageSchema } from "@/components/messages";
 import { ModelSelector } from "@/components/model-selector";
 import { ProviderOptions } from "@/components/provider-options";
+import { TagsSelect } from "@/components/tags-select";
 import ToolsSection from "@/components/tools-section";
 import { VariablesDrawer } from "@/components/variables-drawer";
 import { VersionHistory } from "@/components/version-history";
 import { copyToClipboard } from "@/lib/clipboard";
-import { agentQuery, agentVersionsQuery, providersQuery } from "@/lib/queries";
+import {
+	agentQuery,
+	agentTagsQuery,
+	agentVersionsQuery,
+	providersQuery,
+} from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute(
@@ -160,6 +166,12 @@ function RouteComponent() {
 		...agentVersionsQuery(agentId),
 		enabled: !isNewAgent,
 	});
+
+	// Fetch agent tags
+	const { data: agentTags } = useQuery(agentTagsQuery(agentId));
+
+	// Derive selected tag IDs from agent tags
+	const selectedTagIds = agentTags?.map((at) => at.tag_id) || [];
 
 	useEffect(() => {
 		if (version) {
@@ -322,6 +334,41 @@ function RouteComponent() {
 					error instanceof Error
 						? error.message
 						: "Failed to update agent name.",
+				color: "danger",
+			});
+		},
+	});
+
+	// Sync tags mutation - replaces all agent tags with new ones
+	const syncTagsMutation = useMutation({
+		mutationFn: async (tagIds: string[]) => {
+			// Delete existing agent tags
+			const { error: deleteError } = await supabase
+				.from("agent_tags")
+				.delete()
+				.eq("agent_id", agentId);
+
+			if (deleteError) throw deleteError;
+
+			// Insert new agent tags
+			if (tagIds.length > 0) {
+				const { error: insertError } = await supabase
+					.from("agent_tags")
+					.insert(
+						tagIds.map((tagId) => ({ agent_id: agentId, tag_id: tagId })),
+					);
+
+				if (insertError) throw insertError;
+			}
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["agent-tags", agentId] });
+			queryClient.invalidateQueries({ queryKey: ["agents", workspaceId] });
+		},
+		onError: (error) => {
+			addToast({
+				description:
+					error instanceof Error ? error.message : "Failed to update tags.",
 				color: "danger",
 			});
 		},
@@ -608,7 +655,7 @@ function RouteComponent() {
 				/>
 
 				<div className="flex items-center gap-2">
-					<form.Subscribe
+					{/* <form.Subscribe
 						selector={(state) => ({
 							isDirty: state.isDirty,
 						})}
@@ -624,7 +671,16 @@ function RouteComponent() {
 								</p>
 							);
 						}}
-					</form.Subscribe>
+					</form.Subscribe> */}
+
+					{!isNewAgent && (
+						<TagsSelect
+							workspaceId={workspaceId}
+							selectedTags={selectedTagIds}
+							onTagsChange={(tagIds) => syncTagsMutation.mutate(tagIds)}
+							allowCreate
+						/>
+					)}
 
 					{agent && (
 						<Button

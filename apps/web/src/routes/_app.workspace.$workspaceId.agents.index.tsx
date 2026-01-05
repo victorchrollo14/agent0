@@ -29,6 +29,8 @@ import {
 import { useEffect, useState } from "react";
 import { ConfirmationModal } from "@/components/confirmation-modal";
 import IDCopy from "@/components/id-copy";
+import { TagChip } from "@/components/tag-chip";
+import { TagsSelect } from "@/components/tags-select";
 import { agentsQuery } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 
@@ -39,15 +41,17 @@ export const Route = createFileRoute("/_app/workspace/$workspaceId/agents/")({
 	): {
 		page: number;
 		search?: string;
+		tags?: string[];
 	} => ({
 		page: Number(search?.page ?? 1),
 		search: (search?.search as string) || undefined,
+		tags: (search?.tags as string[]) || undefined,
 	}),
 });
 
 function RouteComponent() {
 	const { workspaceId } = Route.useParams();
-	const { page, search: searchQuery } = Route.useSearch();
+	const { page, search: searchQuery, tags: selectedTags } = Route.useSearch();
 	const navigate = useNavigate({ from: Route.fullPath });
 	const queryClient = useQueryClient();
 
@@ -58,9 +62,9 @@ function RouteComponent() {
 		name: string;
 	} | null>(null);
 
-	// Fetch Agents
+	// Fetch Agents with tag filter
 	const { data: agents, isLoading } = useQuery(
-		agentsQuery(workspaceId, page, searchQuery),
+		agentsQuery(workspaceId, page, searchQuery, selectedTags),
 	);
 
 	// Local state for search input with debounce
@@ -84,12 +88,13 @@ function RouteComponent() {
 				search: {
 					page: 1,
 					search: trimmed || undefined,
+					tags: selectedTags,
 				},
 			});
 		}, 300);
 
 		return () => clearTimeout(timer);
-	}, [localSearch, searchQuery, navigate]);
+	}, [localSearch, searchQuery, navigate, selectedTags]);
 
 	// Delete mutation
 	const deleteMutation = useMutation({
@@ -159,6 +164,19 @@ function RouteComponent() {
 								isClearable
 								onClear={() => setLocalSearch("")}
 							/>
+							<TagsSelect
+								workspaceId={workspaceId}
+								selectedTags={selectedTags || []}
+								onTagsChange={(tags) =>
+									navigate({
+										search: {
+											page: 1,
+											search: searchQuery,
+											tags: tags.length > 0 ? tags : undefined,
+										},
+									})
+								}
+							/>
 						</div>
 						<div className="flex gap-2">
 							<Tooltip content="Previous">
@@ -172,6 +190,7 @@ function RouteComponent() {
 											search: {
 												page: page - 1,
 												search: searchQuery,
+												tags: selectedTags,
 											},
 										})
 									}
@@ -190,6 +209,7 @@ function RouteComponent() {
 											search: {
 												page: page + 1,
 												search: searchQuery,
+												tags: selectedTags,
 											},
 										})
 									}
@@ -203,6 +223,7 @@ function RouteComponent() {
 			>
 				<TableHeader>
 					<TableColumn>Name</TableColumn>
+					<TableColumn>Tags</TableColumn>
 					<TableColumn>ID</TableColumn>
 					<TableColumn>Created At</TableColumn>
 					<TableColumn className="w-20" hideHeader>
@@ -222,6 +243,19 @@ function RouteComponent() {
 							href={`/workspace/${workspaceId}/agents/${item.id}`}
 						>
 							<TableCell>{item.name}</TableCell>
+							<TableCell>
+								<div className="flex gap-1 flex-wrap">
+									{item.agent_tags?.map((at) =>
+										at.tags ? (
+											<TagChip
+												key={at.tags.id}
+												name={at.tags.name}
+												color={at.tags.color}
+											/>
+										) : null,
+									)}
+								</div>
+							</TableCell>
 							<TableCell>
 								<IDCopy id={item.id} />
 							</TableCell>
