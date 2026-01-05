@@ -95,7 +95,7 @@ export async function registerEmbedRoutes(fastify: FastifyInstance) {
 		const { provider, aiProvider } = result;
 
 		try {
-			const embeddingModel = aiProvider?.embeddingModel(body.model.name);
+			const embeddingModel = aiProvider?.textEmbeddingModel(body.model.name);
 
 			if (!embeddingModel) {
 				return reply.code(400).send({
@@ -154,7 +154,7 @@ export async function registerEmbedRoutes(fastify: FastifyInstance) {
 		const { provider, aiProvider } = result;
 
 		try {
-			const embeddingModel = aiProvider?.embeddingModel(body.model.name);
+			const embeddingModel = aiProvider?.textEmbeddingModel(body.model.name);
 
 			if (!embeddingModel) {
 				return reply.code(400).send({

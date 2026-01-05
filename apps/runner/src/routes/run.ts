@@ -204,7 +204,10 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 								preProcessingTime -
 								startTime,
 							tokens: totalUsage.totalTokens,
-							cost: calculateModelCost(model.modelId, totalUsage),
+							cost: calculateModelCost(
+								typeof model === "string" ? model : model.modelId,
+								totalUsage,
+							),
 						});
 						await uploadRunData(id, runData);
 					},
@@ -298,7 +301,10 @@ export async function registerRunRoute(fastify: FastifyInstance) {
 					first_token_time: Date.now() - preProcessingTime - startTime,
 					response_time: 0,
 					tokens: totalUsage.totalTokens,
-					cost: calculateModelCost(model.modelId, totalUsage),
+					cost: calculateModelCost(
+						typeof model === "string" ? model : model.modelId,
+						totalUsage,
+					),
 				});
 				await uploadRunData(id, runData);
 

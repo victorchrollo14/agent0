@@ -116,7 +116,10 @@ export async function registerTestRoute(fastify: FastifyInstance) {
 					response_time:
 						Date.now() - (firstTokenTime || 0) - preProcessingTime - startTime,
 					tokens: totalUsage.totalTokens,
-					cost: calculateModelCost(model.modelId, totalUsage),
+					cost: calculateModelCost(
+						typeof model === "string" ? model : model.modelId,
+						totalUsage,
+					),
 				});
 				await uploadRunData(id, runData);
 			},

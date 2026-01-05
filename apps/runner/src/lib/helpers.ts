@@ -1,8 +1,8 @@
 import { ReadableStream } from "node:stream/web";
 import { experimental_createMCPClient as createMCPClient } from "@ai-sdk/mcp";
 import {
-	type FlexibleSchema,
 	jsonSchema,
+	type LanguageModel,
 	type ModelMessage,
 	type streamText,
 	type Tool,
@@ -45,7 +45,7 @@ export const prepareProviderAndMessages = async (
 	) as ModelMessage[];
 
 	return {
-		model: aiProvider(model.name),
+		model: aiProvider(model.name) as LanguageModel,
 		provider,
 		processedMessages,
 	};
