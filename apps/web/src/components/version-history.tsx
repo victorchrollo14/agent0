@@ -48,7 +48,7 @@ export const VersionHistory = ({
 			</PopoverTrigger>
 			<PopoverContent className="p-0">
 				<ScrollShadow className="max-h-96 p-2">
-					<Listbox>
+					<Listbox label="Version History">
 						{versions.map((version) => {
 							const user = workspace?.workspace_user.find(
 								(user) => user.user_id === version.user_id,

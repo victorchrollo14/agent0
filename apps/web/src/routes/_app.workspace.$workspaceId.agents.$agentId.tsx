@@ -468,21 +468,19 @@ function RouteComponent() {
 			providerOptions?: z.infer<typeof agentFormSchema>["providerOptions"];
 		};
 
-		setTimeout(() => {
-			form.reset(
-				{
-					model: data.model || { provider_id: "", name: "" },
-					maxOutputTokens: data.maxOutputTokens || 2048,
-					outputFormat: data.outputFormat || "text",
-					temperature: data.temperature ?? 0.7,
-					maxStepCount: data.maxStepCount || 10,
-					messages: data.messages || [],
-					tools: data.tools || [],
-					providerOptions: data.providerOptions || {},
-				},
-				{ keepDefaultValues: true },
-			);
-		}, 200);
+		form.reset(
+			{
+				model: data.model || { provider_id: "", name: "" },
+				maxOutputTokens: data.maxOutputTokens || 2048,
+				outputFormat: data.outputFormat || "text",
+				temperature: data.temperature ?? 0.7,
+				maxStepCount: data.maxStepCount || 10,
+				messages: data.messages || [],
+				tools: data.tools || [],
+				providerOptions: data.providerOptions || {},
+			},
+			{ keepDefaultValues: true },
+		);
 	}, [version, form]);
 
 	// Check for replay data from router state when creating a new agent
@@ -1057,7 +1055,7 @@ function RouteComponent() {
 							)}
 						</form.Field>
 
-						<form.Field name="messages" mode="array">
+						<form.Field name="messages">
 							{(field) => (
 								<Messages
 									value={field.state.value}
