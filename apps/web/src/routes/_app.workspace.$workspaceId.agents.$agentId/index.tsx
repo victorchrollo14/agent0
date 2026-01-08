@@ -49,6 +49,7 @@ import {
 	agentVersionsQuery,
 	providersQuery,
 } from "@/lib/queries";
+import { AddMessage } from "./components/add-message";
 import { useAgentMutations } from "./hooks/use-agent-mutations";
 import { useAgentRunner } from "./hooks/use-agent-runner";
 import { type AgentFormValues, agentFormSchema } from "./types";
@@ -620,68 +621,16 @@ function RouteComponent() {
 								/>
 							)}
 						</form.Field>
-						<Dropdown placement="top-start">
-							<DropdownTrigger>
-								<Button
-									size="sm"
-									variant="flat"
-									startContent={<LucideListPlus className="size-3.5" />}
-								>
-									Add
-								</Button>
-							</DropdownTrigger>
-							<DropdownMenu>
-								<DropdownItem
-									key="user"
-									title="User Message"
-									onPress={() => {
-										const currentMessages = form.getFieldValue("messages");
-										form.setFieldValue("messages", [
-											...currentMessages,
-											{ role: "user", content: [{ type: "text", text: "" }] },
-										]);
-									}}
-								/>
-								<DropdownItem
-									key="assistant"
-									title="Assistant Message"
-									onPress={() => {
-										const currentMessages = form.getFieldValue("messages");
-										form.setFieldValue("messages", [
-											...currentMessages,
-											{
-												role: "assistant",
-												content: [{ type: "text", text: "" }],
-											},
-										]);
-									}}
-								/>
-								<DropdownItem
-									key="tool"
-									title="Tool Message"
-									onPress={() => {
-										const currentMessages = form.getFieldValue("messages");
-										form.setFieldValue("messages", [
-											...currentMessages,
-											{
-												role: "tool",
-												content: [
-													{
-														type: "tool-result",
-														toolCallId: "",
-														toolName: "",
-														output: {
-															type: "json",
-															value: {},
-														},
-													},
-												],
-											},
-										]);
-									}}
-								/>
-							</DropdownMenu>
-						</Dropdown>
+
+						<AddMessage
+							onAdd={(newMessage: MessageT) => {
+								const currentMessages = form.getFieldValue("messages");
+								form.setFieldValue("messages", [
+									...currentMessages,
+									newMessage,
+								]);
+							}}
+						/>
 					</div>
 				</div>
 
@@ -690,7 +639,7 @@ function RouteComponent() {
 						<Accordion variant="splitted">
 							{warnings.map((warning, index) => (
 								<AccordionItem
-									key={"${index + 1}"}
+									key={`${index + 1}`}
 									classNames={{
 										base: "bg-warning-50 bg",
 										title: "text-warning-600 font-medium",
