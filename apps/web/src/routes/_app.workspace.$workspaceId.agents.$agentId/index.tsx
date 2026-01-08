@@ -171,16 +171,7 @@ function RouteComponent() {
 			return;
 		}
 
-		const data = version.data as {
-			model: { provider_id: string; name: string };
-			maxOutputTokens?: number;
-			outputFormat?: "text" | "json";
-			temperature?: number;
-			maxStepCount?: number;
-			messages?: (Omit<MessageT, "id"> & { id?: string })[];
-			tools?: AgentFormValues["tools"];
-			providerOptions?: AgentFormValues["providerOptions"];
-		};
+		const data = version.data as AgentFormValues;
 
 		// Ensure all messages have IDs (for backward compatibility with old data)
 		const messagesWithIds = (data.messages || []).map((msg) => ({
