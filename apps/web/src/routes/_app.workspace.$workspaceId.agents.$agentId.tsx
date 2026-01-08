@@ -1100,6 +1100,30 @@ function RouteComponent() {
 										]);
 									}}
 								/>
+								<DropdownItem
+									key="tool"
+									title="Tool Message"
+									onPress={() => {
+										const currentMessages = form.getFieldValue("messages");
+										form.setFieldValue("messages", [
+											...currentMessages,
+											{
+												role: "tool",
+												content: [
+													{
+														type: "tool-result",
+														toolCallId: "",
+														toolName: "",
+														output: {
+															type: "json",
+															value: {},
+														},
+													},
+												],
+											},
+										]);
+									}}
+								/>
 							</DropdownMenu>
 						</Dropdown>
 					</div>
