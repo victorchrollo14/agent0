@@ -16,7 +16,13 @@ import {
 	Radio,
 	RadioGroup,
 } from "@heroui/react";
-import { LucideFileText, LucidePlus, LucideTrash2 } from "lucide-react";
+import { Reorder, useDragControls } from "framer-motion";
+import {
+	LucideFileText,
+	LucideGripVertical,
+	LucidePlus,
+	LucideTrash2,
+} from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { z } from "zod";
@@ -235,76 +241,96 @@ export function UserMessage({
 		setEmbedType("image");
 	};
 
+	const controls = useDragControls();
+
 	return (
 		<>
-			<Card>
-				<CardHeader className="flex items-center justify-between pl-3 pr-1 h-10">
-					<span className="text-sm text-default-500">User | {value.id}</span>
-					{!isReadOnly && (
-						<Dropdown>
-							<DropdownTrigger>
-								<Button size="sm" isIconOnly variant="light">
-									<LucidePlus className="size-3.5" />
-								</Button>
-							</DropdownTrigger>
-							<DropdownMenu>
-								<DropdownItem
-									key="upload"
-									onPress={() => fileInputRef.current?.click()}
-								>
-									Upload
-								</DropdownItem>
-								<DropdownItem
-									key="embed"
-									onPress={() => setIsEmbedModalOpen(true)}
-								>
-									Embed
-								</DropdownItem>
-							</DropdownMenu>
-						</Dropdown>
-					)}
-				</CardHeader>
-				<CardBody className="p-3 border-t border-default-200 flex flex-col gap-2">
-					{value.content.map((part, index) => {
-						return (
-							<div key={`${index + 1}`} className="flex">
-								<UserMessagePart
-									isReadOnly={isReadOnly}
-									value={part}
-									onValueChange={(v) => {
-										const newContent = [...value.content];
-										newContent[index] = v;
-										onValueChange({ ...value, content: newContent });
-									}}
-								/>
-
-								{!isReadOnly && (
-									<Button
-										className="-mr-2"
-										size="sm"
-										isIconOnly
-										variant="light"
-										onPress={() => {
+			<Reorder.Item
+				key={value.id}
+				value={value}
+				dragListener={false}
+				dragControls={controls}
+			>
+				<Card>
+					<CardHeader className="flex items-center justify-between pl-1 pr-1 h-10">
+						<div className="flex items-center">
+							<div
+								className="h-full py-3 px-2 reorder-handle cursor-grab"
+								onPointerDown={(e) => controls.start(e)}
+							>
+								<LucideGripVertical className="size-3.5 text-default-500" />
+							</div>
+							<span className="text-sm text-default-500">User</span>
+						</div>
+						{!isReadOnly && (
+							<Dropdown>
+								<DropdownTrigger>
+									<Button size="sm" isIconOnly variant="light">
+										<LucidePlus className="size-3.5" />
+									</Button>
+								</DropdownTrigger>
+								<DropdownMenu>
+									<DropdownItem
+										key="upload"
+										onPress={() => fileInputRef.current?.click()}
+									>
+										Upload
+									</DropdownItem>
+									<DropdownItem
+										key="embed"
+										onPress={() => setIsEmbedModalOpen(true)}
+									>
+										Embed
+									</DropdownItem>
+								</DropdownMenu>
+							</Dropdown>
+						)}
+					</CardHeader>
+					<CardBody className="p-3 border-t border-default-200 flex flex-col gap-2">
+						{value.content.map((part, index) => {
+							return (
+								<div key={`${index + 1}`} className="flex">
+									<UserMessagePart
+										isReadOnly={isReadOnly}
+										value={part}
+										onValueChange={(v) => {
 											const newContent = [...value.content];
-											newContent.splice(index, 1);
-
-											if (newContent.length === 0) {
-												onValueChange(null);
-												return;
-											}
-
+											newContent[index] = v;
 											onValueChange({ ...value, content: newContent });
 										}}
-									>
-										<LucideTrash2 className="size-3.5" />
-									</Button>
-								)}
-							</div>
-						);
-					})}
-					<Variables variables={variables} onVariablePress={onVariablePress} />
-				</CardBody>
-			</Card>
+									/>
+
+									{!isReadOnly && (
+										<Button
+											className="-mr-2"
+											size="sm"
+											isIconOnly
+											variant="light"
+											onPress={() => {
+												const newContent = [...value.content];
+												newContent.splice(index, 1);
+
+												if (newContent.length === 0) {
+													onValueChange(null);
+													return;
+												}
+
+												onValueChange({ ...value, content: newContent });
+											}}
+										>
+											<LucideTrash2 className="size-3.5" />
+										</Button>
+									)}
+								</div>
+							);
+						})}
+						<Variables
+							variables={variables}
+							onVariablePress={onVariablePress}
+						/>
+					</CardBody>
+				</Card>
+			</Reorder.Item>
 
 			{/* Hidden file input for upload */}
 			<input

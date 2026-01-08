@@ -53,70 +53,67 @@ export function Messages({
 
 				if (message.role === "user") {
 					return (
-						<Reorder.Item key={message.id} value={message}>
-							<UserMessage
-								isReadOnly={isReadOnly}
-								value={message}
-								onValueChange={(updatedMessage) => {
-									const newMessages = [...value];
+						<UserMessage
+							key={message.id}
+							isReadOnly={isReadOnly}
+							value={message}
+							onValueChange={(updatedMessage) => {
+								const newMessages = [...value];
 
-									if (updatedMessage === null) {
-										newMessages.splice(index, 1);
-									} else {
-										newMessages[index] = updatedMessage;
-									}
+								if (updatedMessage === null) {
+									newMessages.splice(index, 1);
+								} else {
+									newMessages[index] = updatedMessage;
+								}
 
-									onValueChange(newMessages);
-								}}
-								onVariablePress={onVariablePress}
-							/>
-						</Reorder.Item>
+								onValueChange(newMessages);
+							}}
+							onVariablePress={onVariablePress}
+						/>
 					);
 				}
 
 				if (message.role === "assistant") {
 					return (
-						<Reorder.Item key={message.id} value={message}>
-							<AssistantMessage
-								isReadOnly={isReadOnly}
-								value={message}
-								onValueChange={(updatedMessage) => {
-									const newMessages = [...value];
+						<AssistantMessage
+							key={message.id}
+							isReadOnly={isReadOnly}
+							value={message}
+							onValueChange={(updatedMessage) => {
+								const newMessages = [...value];
 
-									if (updatedMessage === null) {
-										newMessages.splice(index, 1);
-									} else {
-										newMessages[index] = updatedMessage;
-									}
+								if (updatedMessage === null) {
+									newMessages.splice(index, 1);
+								} else {
+									newMessages[index] = updatedMessage;
+								}
 
-									onValueChange(newMessages);
-								}}
-								onVariablePress={onVariablePress}
-							/>
-						</Reorder.Item>
+								onValueChange(newMessages);
+							}}
+							onVariablePress={onVariablePress}
+						/>
 					);
 				}
 
 				if (message.role === "tool") {
 					return (
-						<Reorder.Item key={message.id} value={message}>
-							<ToolMessage
-								isReadOnly={isReadOnly}
-								value={message}
-								onValueChange={(updatedMessage) => {
-									const newMessages = [...value];
+						<ToolMessage
+							key={message.id}
+							isReadOnly={isReadOnly}
+							value={message}
+							onValueChange={(updatedMessage) => {
+								const newMessages = [...value];
 
-									if (updatedMessage === null) {
-										newMessages.splice(index, 1);
-									} else {
-										newMessages[index] = updatedMessage;
-									}
+								if (updatedMessage === null) {
+									newMessages.splice(index, 1);
+								} else {
+									newMessages[index] = updatedMessage;
+								}
 
-									onValueChange(newMessages);
-								}}
-								onVariablePress={onVariablePress}
-							/>
-						</Reorder.Item>
+								onValueChange(newMessages);
+							}}
+							onVariablePress={onVariablePress}
+						/>
 					);
 				}
 
