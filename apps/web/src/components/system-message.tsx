@@ -35,7 +35,12 @@ export function SystemMessage({
 	}, [value.content]);
 
 	return (
-		<Reorder.Item key={value.id} value={value} dragListener={false}>
+		<Reorder.Item
+			key={value.id}
+			value={value}
+			layout="position"
+			dragListener={false}
+		>
 			<Card>
 				<CardHeader className="flex items-center justify-between pl-3 pr-1 h-10">
 					<span className="text-sm text-default-500">System</span>

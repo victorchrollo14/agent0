@@ -85,6 +85,7 @@ export function ToolMessage({
 		<Reorder.Item
 			key={value.id}
 			value={value}
+			layout="position"
 			dragListener={false}
 			dragControls={controls}
 		>
