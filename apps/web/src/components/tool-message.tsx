@@ -89,15 +89,21 @@ export function ToolMessage({
 			dragControls={controls}
 		>
 			<Card>
-				<CardHeader className="flex items-center justify-between pl-1 pr-1 h-10">
+				<CardHeader className="flex items-center justify-between pl-1 pr-1 h-10 z-0">
 					<div className="flex items-center">
-						<div
-							className="h-full py-3 px-2 reorder-handle cursor-grab"
-							onPointerDown={(e) => controls.start(e)}
+						{!isReadOnly && (
+							<div
+								className="h-full py-3 px-2 reorder-handle cursor-grab"
+								onPointerDown={(e) => controls.start(e)}
+							>
+								<LucideGripVertical className="size-3.5 text-default-500" />
+							</div>
+						)}
+						<span
+							className={`text-sm text-default-500 ${isReadOnly ? "pl-2" : ""}`}
 						>
-							<LucideGripVertical className="size-3.5 text-default-500" />
-						</div>
-						<span className="text-sm text-default-500">Tool</span>
+							Tool
+						</span>
 					</div>
 				</CardHeader>
 				<CardBody className="p-3 border-t border-default-200 flex flex-col gap-3">
