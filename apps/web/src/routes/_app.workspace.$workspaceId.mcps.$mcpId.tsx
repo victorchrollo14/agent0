@@ -5,6 +5,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { nanoid } from "nanoid";
 import * as openpgp from "openpgp";
+import { MonacoJsonField } from "@/components/monaco-json-field";
 import { mcpsQuery } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 
@@ -187,7 +188,17 @@ function RouteComponent() {
 	const form = useForm({
 		defaultValues: {
 			name: currentMcp?.name || "",
-			data: "",
+			data: JSON.stringify(
+				{
+					transport: {
+						type: "http",
+						url: "https://your-server.com/mcp",
+						headers: { Authorization: "Bearer my-api-key" },
+					},
+				},
+				null,
+				2,
+			),
 		},
 		onSubmit: async ({ value }) => {
 			if (isNewMcp) {
@@ -262,23 +273,11 @@ function RouteComponent() {
 						}}
 					>
 						{(field) => (
-							<Textarea
+							<MonacoJsonField
 								label="Configuration (JSON)"
-								placeholder={`{
-    "transport": {
-    	"type": "http",
-    	"url": "https://your-server.com/mcp",
-    	"headers": { "Authorization": "Bearer my-api-key" }
-    }
-}`}
 								value={field.state.value}
 								onValueChange={field.handleChange}
 								isRequired
-								variant="bordered"
-								minRows={10}
-								classNames={{
-									input: "font-mono text-sm",
-								}}
 								description="MCP server configuration in JSON format. See Vercel AI SDK MCP docs for details."
 								isInvalid={field.state.meta.errors.length > 0}
 								errorMessage={field.state.meta.errors[0]}

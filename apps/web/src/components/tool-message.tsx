@@ -37,18 +37,18 @@ function ToolMessagePart({
 		return (
 			<div
 				className={cn(
-					"w-full space-y-2 bg-default-50 dark:bg-default-100 rounded-large",
+					"border border-default-200 overflow-hidden rounded-large w-full space-y-2",
 					(value.output as { type: string; value: unknown })?.type.startsWith(
 						"error",
 					)
-						? "bg-red-50 dark:bg-red-900/30"
+						? "border-danger"
 						: "",
 				)}
 			>
 				<MonacoJsonEditor
 					readOnly={isReadOnly}
 					value={JSON.stringify(value, null, 2)}
-					onChange={(newData) => {
+					onValueChange={(newData) => {
 						onValueChange(JSON.parse(newData));
 					}}
 				/>

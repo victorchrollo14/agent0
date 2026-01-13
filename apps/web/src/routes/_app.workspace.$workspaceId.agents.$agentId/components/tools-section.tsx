@@ -29,6 +29,7 @@ import {
 	LucideWrench,
 } from "lucide-react";
 import { useState } from "react";
+import { MonacoJsonField } from "@/components/monaco-json-field";
 import { mcpsQuery } from "@/lib/queries";
 import type { CustomTool, MCPTool } from "@/lib/types";
 
@@ -97,7 +98,19 @@ export default function ToolsSection({
 	// Custom tool form state
 	const [customToolTitle, setCustomToolTitle] = useState("");
 	const [customToolDescription, setCustomToolDescription] = useState("");
-	const [customToolInputSchema, setCustomToolInputSchema] = useState("");
+	const [customToolInputSchema, setCustomToolInputSchema] = useState(
+		JSON.stringify(
+			{
+				type: "object",
+				properties: {
+					param1: { type: "string", description: "Description of param1" },
+				},
+				required: ["param1"],
+			},
+			null,
+			2,
+		),
+	);
 	const [inputSchemaError, setInputSchemaError] = useState<string | null>(null);
 
 	// Track the custom tool being edited (null means adding new tool)
@@ -507,9 +520,10 @@ export default function ToolsSection({
 							description="A clear description helps the AI understand when to use this tool"
 							isRequired
 						/>
-						<Textarea
-							label="Input Schema (JSON)"
-							placeholder='{"type": "object", "properties": {...}}'
+						<MonacoJsonField
+							label="Input Schema"
+							isRequired
+							description="Define the parameters this tool accepts using JSON Schema format."
 							value={customToolInputSchema}
 							onValueChange={(val) => {
 								setCustomToolInputSchema(val);
@@ -525,13 +539,9 @@ export default function ToolsSection({
 									setInputSchemaError(null);
 								}
 							}}
-							description="Define the parameters this tool accepts using JSON Schema format. Leave empty for no parameters."
 							isInvalid={!!inputSchemaError}
 							errorMessage={inputSchemaError}
-							minRows={4}
-							classNames={{
-								input: "font-mono text-sm",
-							}}
+							editorMinHeight={250}
 						/>
 					</ModalBody>
 					<ModalFooter>

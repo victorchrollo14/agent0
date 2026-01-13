@@ -103,11 +103,11 @@ function AssistantMessagePart({
 
 	if (value.type === "tool-call") {
 		return (
-			<div className="w-full space-y-2 bg-default-50 dark:bg-default-100 rounded-large">
+			<div className="w-full space-y-2 rounded-large border border-default-200 overflow-hidden">
 				<MonacoJsonEditor
 					readOnly={isReadOnly}
 					value={JSON.stringify(value, null, 2)}
-					onChange={(newData) => {
+					onValueChange={(newData) => {
 						onValueChange(JSON.parse(newData));
 					}}
 				/>

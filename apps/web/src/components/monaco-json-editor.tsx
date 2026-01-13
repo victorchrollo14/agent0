@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 
 interface MonacoJsonEditorProps {
 	value: string;
-	onChange?: (value: string) => void;
+	onValueChange?: (value: string) => void;
 	readOnly?: boolean;
 	minHeight?: number;
 }
@@ -15,7 +15,7 @@ interface MonacoJsonEditorProps {
  */
 export function MonacoJsonEditor({
 	value,
-	onChange,
+	onValueChange,
 	readOnly = false,
 	minHeight = 100,
 }: MonacoJsonEditorProps) {
@@ -64,23 +64,15 @@ export function MonacoJsonEditor({
 	// Handle content change
 	const handleChange = useCallback(
 		(newValue: string | undefined) => {
-			if (!onChange || !newValue) return;
+			if (!onValueChange || !newValue) return;
 
-			try {
-				JSON.parse(newValue);
-				onChange(newValue);
-			} catch {
-				// Invalid JSON - don't update parent
-			}
+			onValueChange(newValue);
 		},
-		[onChange],
+		[onValueChange],
 	);
 
 	return (
-		<div
-			className="w-full rounded-lg overflow-hidden border border-default-200"
-			style={{ height: editorHeight }}
-		>
+		<div className="w-full overflow-hidden" style={{ height: editorHeight }}>
 			<Editor
 				height="100%"
 				language="json"

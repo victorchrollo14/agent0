@@ -12,6 +12,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { nanoid } from "nanoid";
 import * as openpgp from "openpgp";
+import { MonacoJsonField } from "@/components/monaco-json-field";
 import { PROVIDER_TYPES } from "@/lib/providers";
 import { providersQuery } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
@@ -153,7 +154,13 @@ function RouteComponent() {
 		defaultValues: {
 			name: currentProvider?.name || "",
 			type: currentProvider?.type || "",
-			data: "",
+			data: JSON.stringify(
+				{
+					apiKey: "your-api-key",
+				},
+				null,
+				2,
+			),
 		},
 		onSubmit: async ({ value }) => {
 			if (isNewProvider) {
@@ -266,20 +273,15 @@ function RouteComponent() {
 						}}
 					>
 						{(field) => (
-							<Textarea
+							<MonacoJsonField
 								label="Configuration (JSON)"
-								placeholder='{"apiKey": "your-api-key"}'
-								value={field.state.value}
-								onValueChange={field.handleChange}
 								isRequired
-								variant="bordered"
-								minRows={8}
-								classNames={{
-									input: "font-mono text-sm",
-								}}
 								description="Provider-specific configuration in JSON format. This will override any existing configuration."
 								isInvalid={field.state.meta.errors.length > 0}
 								errorMessage={field.state.meta.errors[0]}
+								value={field.state.value}
+								onValueChange={field.handleChange}
+								editorMinHeight={200}
 							/>
 						)}
 					</form.Field>
