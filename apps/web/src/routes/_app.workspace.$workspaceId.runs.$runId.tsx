@@ -536,7 +536,11 @@ function RouteComponent() {
 					<ModalHeader>Raw JSON Data</ModalHeader>
 					<ModalBody className="p-6">
 						<MonacoJsonEditor
-							value={runData || { error: "Run data not available" }}
+							value={
+								runData
+									? JSON.stringify(runData, null, 2)
+									: JSON.stringify({ error: "Run Data not available" })
+							}
 							readOnly
 							minHeight={400}
 						/>

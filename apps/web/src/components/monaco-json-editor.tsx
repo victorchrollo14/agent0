@@ -3,8 +3,8 @@ import Editor, { type OnMount } from "@monaco-editor/react";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 interface MonacoJsonEditorProps {
-	value: unknown;
-	onChange?: (value: unknown) => void;
+	value: string;
+	onChange?: (value: string) => void;
 	readOnly?: boolean;
 	minHeight?: number;
 }
@@ -35,15 +35,6 @@ export function MonacoJsonEditor({
 		}
 		return "vs";
 	}, [appTheme]);
-
-	// Convert value to formatted JSON string
-	const jsonString = useMemo(() => {
-		try {
-			return JSON.stringify(value, null, 2);
-		} catch {
-			return "";
-		}
-	}, [value]);
 
 	// Update editor height based on content
 	const updateEditorHeight = useCallback(() => {
@@ -76,8 +67,8 @@ export function MonacoJsonEditor({
 			if (!onChange || !newValue) return;
 
 			try {
-				const parsed = JSON.parse(newValue);
-				onChange(parsed);
+				JSON.parse(newValue);
+				onChange(newValue);
 			} catch {
 				// Invalid JSON - don't update parent
 			}
@@ -94,7 +85,7 @@ export function MonacoJsonEditor({
 				height="100%"
 				language="json"
 				theme={monacoTheme}
-				value={jsonString}
+				value={value}
 				onChange={handleChange}
 				onMount={handleEditorMount}
 				options={{

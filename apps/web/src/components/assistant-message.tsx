@@ -106,9 +106,9 @@ function AssistantMessagePart({
 			<div className="w-full space-y-2 bg-default-50 dark:bg-default-100 rounded-large">
 				<MonacoJsonEditor
 					readOnly={isReadOnly}
-					value={value}
+					value={JSON.stringify(value, null, 2)}
 					onChange={(newData) => {
-						onValueChange(newData as AssistantMessageContent[number]);
+						onValueChange(JSON.parse(newData));
 					}}
 				/>
 			</div>

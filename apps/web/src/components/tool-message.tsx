@@ -47,9 +47,9 @@ function ToolMessagePart({
 			>
 				<MonacoJsonEditor
 					readOnly={isReadOnly}
-					value={value}
+					value={JSON.stringify(value, null, 2)}
 					onChange={(newData) => {
-						onValueChange(newData as ToolMessageContent[number]);
+						onValueChange(JSON.parse(newData));
 					}}
 				/>
 			</div>
