@@ -512,37 +512,3 @@ export const topAgentsQuery = (
 		},
 		enabled: !!workspaceId,
 	});
-
-export const workspaceSetupQuery = (workspaceId: string) =>
-	queryOptions({
-		queryKey: ["workspace-setup", workspaceId],
-		queryFn: async () => {
-			const [agentsResult, providersResult, mcpsResult, apiKeysResult] =
-				await Promise.all([
-					supabase
-						.from("agents")
-						.select("id", { count: "exact", head: true })
-						.eq("workspace_id", workspaceId),
-					supabase
-						.from("providers")
-						.select("id", { count: "exact", head: true })
-						.eq("workspace_id", workspaceId),
-					supabase
-						.from("mcps")
-						.select("id", { count: "exact", head: true })
-						.eq("workspace_id", workspaceId),
-					supabase
-						.from("api_keys")
-						.select("id", { count: "exact", head: true })
-						.eq("workspace_id", workspaceId),
-				]);
-
-			return {
-				agentsCount: agentsResult.count || 0,
-				providersCount: providersResult.count || 0,
-				mcpsCount: mcpsResult.count || 0,
-				apiKeysCount: apiKeysResult.count || 0,
-			};
-		},
-		enabled: !!workspaceId,
-	});
