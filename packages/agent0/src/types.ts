@@ -82,10 +82,13 @@ export interface RunOptions {
 	/** Additional custom tools to add at runtime. These are merged with any tools defined in the agent. */
 	extraTools?: CustomTool[];
 	/** Per-MCP server runtime options, keyed by MCP server ID. */
-	mcpOptions?: Record<string, {
-		/** Custom headers to send to this MCP server */
-		headers?: Record<string, string>;
-	}>;
+	mcpOptions?: Record<
+		string,
+		{
+			/** Custom headers to send to this MCP server */
+			headers?: Record<string, string>;
+		}
+	>;
 	/**
 	 * Arbitrary string key-value labels stored on the run for later filtering
 	 * (e.g. `{ user_id: "u_123" }`). Max 10 keys; each key and value must be under
@@ -104,6 +107,112 @@ export interface RunOptions {
 export interface GenerateResponse {
 	messages: ModelMessage[];
 	text: string;
+}
+
+/**
+ * Options for fetching an agent's details.
+ */
+export interface GetAgentOptions {
+	agentId: string;
+	/** Environment whose deployed version to resolve ('staging' or 'production'). Defaults to 'production'. */
+	environment?: Environment;
+	/** Abort signal to cancel the HTTP request. See {@link RunOptions.signal}. */
+	signal?: AbortSignal;
+}
+
+export interface AgentTag {
+	id: string;
+	name: string;
+	color: string;
+}
+
+/** A tool backed by an MCP server. */
+export interface AgentMCPTool {
+	type: "mcp";
+	mcp_id: string;
+	name: string;
+}
+
+/** A client-executed tool: the LLM emits calls, execution happens externally. */
+export interface AgentCustomTool {
+	type: "custom";
+	title: string;
+	description: string;
+	inputSchema?: Record<string, unknown>;
+}
+
+/**
+ * A subagent: another workspace agent exposed as a tool. The runner executes the
+ * referenced agent's deployed version in-process and returns its text output.
+ */
+export interface AgentSubagentTool {
+	type: "agent";
+	agent_id: string;
+	name: string;
+	description: string;
+}
+
+/** A tool assigned to an agent version — an MCP tool, a custom tool, or a subagent. */
+export type AgentVersionTool =
+	| AgentMCPTool
+	| AgentCustomTool
+	| AgentSubagentTool;
+
+/** A skill embedded in (and versioned with) an agent version. */
+export interface AgentSkill {
+	id: string;
+	name: string;
+	description: string;
+	body: string;
+}
+
+/**
+ * The full content of a deployed agent version: prompt, model, tools, skills, and settings.
+ */
+export interface AgentVersionData {
+	model: { provider_id: string; name: string };
+	messages: ModelMessage[];
+	maxOutputTokens?: number;
+	outputFormat?: "text" | "json";
+	temperature?: number;
+	maxStepCount?: number;
+	/** MCP tools, custom tools, and subagents (entries with `type: "agent"`). */
+	tools?: AgentVersionTool[];
+	/** Skills embedded in this version. */
+	skills?: AgentSkill[];
+	providerOptions?: ProviderOptions;
+}
+
+export interface AgentVersion {
+	id: string;
+	agent_id: string;
+	is_deployed: boolean;
+	user_id: string;
+	data: AgentVersionData;
+	created_at: string;
+}
+
+/**
+ * An agent's details, including the resolved version for the requested environment.
+ */
+export interface AgentDetails {
+	id: string;
+	name: string;
+	staging_version_id: string | null;
+	production_version_id: string | null;
+	staging_model: { provider_id: string; name: string } | null;
+	production_model: { provider_id: string; name: string } | null;
+	tags: AgentTag[];
+	created_at: string;
+	updated_at: string;
+	/** The environment that `version` was resolved for. */
+	environment: Environment;
+	/** The full deployed version for `environment`. */
+	version: AgentVersion;
+}
+
+export interface GetAgentResponse {
+	data: AgentDetails;
 }
 
 /**
